@@ -160,15 +160,19 @@ $$;
 -- ===== RLS =====
 -- Thành viên (không tài khoản) KHÔNG đọc bảng trực tiếp; họ đi qua Edge Function `vao-lop`.
 -- Chính sách dưới đây chỉ cho quản trị.
-do $$
-declare t text;
-begin
-  foreach t in array array['lop','quan_tri_lop','thanh_vien','so_do','cho_ngoi','chuong','anh',
-                           'anh_nguoi','tai_hien','thu_hen_gio','thay_co','ten_mien','quan_tri_he_thong']
-  loop
-    execute format('alter table public.%I enable row level security', t);
-  end loop;
-end $$;
+alter table public.lop enable row level security;
+alter table public.quan_tri_lop enable row level security;
+alter table public.thanh_vien enable row level security;
+alter table public.so_do enable row level security;
+alter table public.cho_ngoi enable row level security;
+alter table public.chuong enable row level security;
+alter table public.anh enable row level security;
+alter table public.anh_nguoi enable row level security;
+alter table public.tai_hien enable row level security;
+alter table public.thu_hen_gio enable row level security;
+alter table public.thay_co enable row level security;
+alter table public.ten_mien enable row level security;
+alter table public.quan_tri_he_thong enable row level security;
 
 create policy "qtht toàn quyền" on public.quan_tri_he_thong for all using (la_quan_tri_he_thong()) with check (la_quan_tri_he_thong());
 
