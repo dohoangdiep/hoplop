@@ -37,7 +37,7 @@ Người dùng phần lớn 27–60 tuổi, dùng điện thoại, vào trang qu
 | Hosting | Cloudflare Pages, build `npm run build`, output `dist` |
 | Ảnh về sau | Cloudflare R2 (không phí băng thông ra) |
 
-Biến môi trường: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`. Cần file `public/_redirects` chứa `/* /index.html 200` để không lỗi 404 khi F5 ở trang con.
+Biến môi trường: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (key dạng `sb_publishable_...`, công khai, đã đặt sẵn trong `.env.production`). Tuyệt đối không đưa secret key `sb_secret_...` hay mật khẩu database vào repo. Cần file `public/_redirects` chứa `/* /index.html 200` để không lỗi 404 khi F5 ở trang con.
 
 ## 4. Địa chỉ (routing)
 
