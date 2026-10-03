@@ -1,0 +1,52 @@
+/* Giao diện quản trị: gọn, dễ đọc, dùng màu thương hiệu từ trangchu.css */
+.qt { min-height: 100vh; background: #F7F5F0; color: #22203A; font-family: 'Be Vietnam Pro', system-ui, sans-serif; }
+.qt * { box-sizing: border-box; }
+.qt-khung { max-width: 960px; margin: 0 auto; padding: 24px 20px; }
+.qt-hep { max-width: 560px; }
+.qt h1 { font-size: 26px; margin: 8px 0 16px; }
+.qt h2 { font-size: 18px; margin: 0 0 10px; }
+.qt-dau { background: #fff; border-bottom: 1px solid #ECE6DA; }
+.qt-dau-trong { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; padding-bottom: 12px; }
+.qt-logo { text-decoration: none; color: #D63A20; font-family: 'Dancing Script', cursive; font-size: 26px; }
+.qt-logo b { font-family: 'Be Vietnam Pro', sans-serif; font-size: 13px; color: #5B3FD6; margin-left: 6px; }
+.qt-hang { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.qt-hang small { color: #5C5873; }
+.qt-tieu-de { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+
+.qt-form { display: flex; flex-direction: column; gap: 8px; }
+.qt-form label, .qt-nhan { font-size: 14px; font-weight: 600; margin-top: 8px; display: block; }
+.qt input, .qt select { min-height: 46px; border: 1px solid #D9D1C2; border-radius: 10px; padding: 0 12px; font: inherit; font-size: 16px; background: #fff; width: 100%; }
+.qt-hai-cot { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.qt-nut { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0 18px; border-radius: 10px; border: 1px solid #5B3FD6; background: #fff; color: #5B3FD6; font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; }
+.qt-nut.chinh { background: #5B3FD6; color: #fff; }
+.qt-nut.nho { min-height: 36px; padding: 0 12px; font-size: 13px; }
+.qt-nut:disabled { opacity: 0.6; }
+.qt-link { background: none; border: none; color: #5B3FD6; font: inherit; cursor: pointer; padding: 8px 0; text-decoration: none; display: inline-block; }
+
+.qt-loi { color: #B3301A; background: #FFE3DC; padding: 10px 12px; border-radius: 10px; }
+.qt-ok { color: #1F7A5A; background: #E3F4EC; padding: 10px 12px; border-radius: 10px; }
+.qt-mo { color: #5C5873; }
+
+.qt-ds { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.qt-ds a { display: flex; flex-direction: column; gap: 4px; padding: 16px; background: #fff; border: 1px solid #ECE6DA; border-radius: 12px; text-decoration: none; color: inherit; }
+.qt-ds span { font-size: 13px; color: #5C5873; }
+
+.qt-tt { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; background: #fff; border: 1px solid #ECE6DA; border-radius: 12px; padding: 16px; margin: 0 0 12px; }
+.qt-tt dt { font-weight: 600; font-size: 14px; }
+.qt-tt dd { margin: 0; word-break: break-all; }
+.qt code { background: #EFEAFD; color: #3F27A8; padding: 2px 6px; border-radius: 6px; font-size: 15px; }
+.qt-code { background: #22203A; color: #F2EEE6; padding: 14px; border-radius: 10px; overflow-x: auto; font-size: 13px; }
+
+.qt-chon-gd { border: none; padding: 0; margin: 12px 0 4px; display: flex; flex-direction: column; gap: 8px; }
+.qt-chon-gd legend { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.qt-chon-gd label { display: flex; gap: 12px; align-items: center; padding: 12px; border: 1px solid #ECE6DA; border-radius: 12px; background: #fff; cursor: pointer; font-weight: 400; margin: 0; }
+.qt-chon-gd label.chon { border: 2px solid #5B3FD6; }
+.qt-chon-gd input { width: auto; min-height: 0; }
+.qt-chon-gd .mau { width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; }
+.qt-chon-gd span:last-child { display: flex; flex-direction: column; }
+.qt-chon-gd small { color: #5C5873; }
+
+.qt-muc { margin-top: 24px; padding-top: 16px; border-top: 1px solid #ECE6DA; }
+.qt-qr { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; margin-top: 12px; }
+.qt-qr img { background: #fff; border: 1px solid #ECE6DA; border-radius: 12px; }

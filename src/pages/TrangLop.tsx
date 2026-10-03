@@ -65,6 +65,14 @@ export default function TrangLop() {
       <div className="khung">
         <Bia lop={lop} kieu={giaoDien.kieuBia} />
         <SapHopLop lop={lop} />
+        {!laLopMau && (
+          <section className="muc">
+            <div className="the" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <h2 className="tieu-de" style={{ fontSize: 22 }}>Trang lớp đang được dựng</h2>
+              <p className="chu-mo" style={{ fontSize: 15, margin: 0 }}>Ban liên lạc đang cùng thanhxuan.vn chuẩn bị sơ đồ lớp và kho ảnh. Hẹn các bạn quay lại sớm nhé!</p>
+            </div>
+          </section>
+        )}
       </div>
       <SoDoChoNgoi lop={lop} />
       <KhoAnhXua lop={lop} />

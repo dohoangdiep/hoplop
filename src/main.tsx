@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import TrangChu from './pages/TrangChu'
 import TrangLop from './pages/TrangLop'
 import { SapCo } from './pages/SapCo'
+import QuanTri from './pages/QuanTri'
 
 const fontChung = document.createElement('link')
 fontChung.rel = 'stylesheet'
@@ -16,7 +17,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<TrangChu />} />
-        <Route path="/quan-tri/*" element={<SapCo tieuDe="Trang quản trị" moTa="Đăng nhập quản trị và tạo lớp mới sẽ có ở bước tiếp theo." />} />
+        <Route path="/quan-tri/*" element={<QuanTri />} />
         <Route path="/:ma" element={<TrangLop />} />
         <Route path="/:ma/gui-anh" element={<SapCo tieuDe="Gửi ảnh xưa" moTa="Phần gửi ảnh (nén ảnh trên điện thoại, tải lên, chờ ban liên lạc duyệt) đang được làm." />} />
         <Route path="/:ma/q/:chuongMa" element={<SapCo tieuDe="Gửi ảnh buổi họp lớp" moTa="Phần gửi ảnh qua QR tại buổi họp đang được làm." />} />
