@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Mẫu 3 – Thanh lịch</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&amp;family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 2000px; box-sizing: border-box; background: #F7F6F2; color: #16223A; font-family: 'Be Vietnam Pro', sans-serif; display: flex; flex-direction: column">
+
+<!-- BÌA: ẢNH TRÀN KHUNG -->
+<header style="display: flex; flex-direction: column">
+<div style="height: 470px; background: #24304A; color: #C9D1E3; position: relative; display: flex; flex-direction: column; justify-content: flex-end">
+<div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><path d="M21 16l-5-5-9 9"></path></svg><span style="font-size: 13px">[Ảnh tập thể tràn khung]</span></div>
+<div style="position: relative; background: rgba(16,24,40,0.78); padding: 22px 22px 26px; display: flex; flex-direction: column; gap: 8px; color: #FFFFFF">
+<span style="font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; color: #E2C58F">THPT [Tên trường] · 2003 – 2006</span>
+<h1 style="margin: 0; font-family: 'Cormorant Garamond', serif; font-size: 54px; font-weight: 600; line-height: 1">Lớp 12A1</h1>
+<span style="font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 20px; color: #E8E4DA">Hai mươi năm, vẫn là chúng ta.</span>
+</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid #E3DED2; background: #FFFFFF">
+<div style="padding: 16px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; border-right: 1px solid #E3DED2"><span style="font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600">20</span><span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #5A6170">năm</span></div>
+<div style="padding: 16px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; border-right: 1px solid #E3DED2"><span style="font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600">3</span><span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #5A6170">lần họp</span></div>
+<div style="padding: 16px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px"><span style="font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600">1.248</span><span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #5A6170">ảnh</span></div>
+</div>
+</header>
+
+<!-- SẮP HỌP LỚP -->
+<section style="margin: 20px 16px 0; padding: 18px; background: #16223A; color: #FFFFFF; border-radius: 4px; box-shadow: none; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<span style="font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #E2C58F">Sắp họp lớp</span>
+<span style="font-size: 13px; font-weight: 600">Còn 12 ngày</span>
+</div>
+<div style="font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 600; line-height: 1.2">Họp lớp 21 năm · Mùng 4 Tết</div>
+<div style="display: flex; gap: 8px">
+<a href="GuiAnhXua.dc.html" style="flex-grow: 1; min-height: 44px; display: flex; align-items: center; justify-content: center; background: #FFFFFF; color: #16223A; border-radius: 2px; font-size: 14px; font-weight: 600; text-decoration: none">Gửi ảnh xưa</a>
+<a href="#" style="flex-grow: 1; min-height: 44px; display: flex; align-items: center; justify-content: center; border: 1px solid #6B7690; color: #FFFFFF; border-radius: 2px; font-size: 14px; font-weight: 600; text-decoration: none">Viết thư cho lớp</a>
+</div>
+</section>
+
+<!-- SƠ ĐỒ CHỖ NGỒI -->
+<section style="padding: 36px 16px 0; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 20px; color: #8A6224">Ngày ấy mình ngồi đâu?</span>
+<h2 style="margin: 0; font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600">Sơ đồ lớp 12A1</h2>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #E3DED2; border-radius: 4px; box-shadow: none; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<div style="height: 32px; background: #16223A; color: #FFFFFF; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase">Bảng đen · Bàn giáo viên</div>
+<sc-for list="{{rows}}" as="row" hint-placeholder-count="3">
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<sc-for list="{{row.desks}}" as="desk" hint-placeholder-count="3">
+<div style="background: #EFEBE1; border-radius: 2px; padding: 5px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px">
+<sc-for list="{{desk.seats}}" as="seat" hint-placeholder-count="2">
+<sc-if value="{{seat.selected}}" hint-placeholder-val="{{false}}">
+<button type="button" onClick="{{seat.pick}}" aria-label="{{seat.full}}" style="min-height: 44px; border: none; border-radius: 2px; background: #16223A; color: #FFFFFF; font-size: 11px; font-weight: 700; cursor: pointer; padding: 0">{{seat.n}}</button>
+</sc-if>
+<sc-if value="{{seat.idle}}" hint-placeholder-val="{{true}}">
+<button type="button" onClick="{{seat.pick}}" aria-label="{{seat.full}}" style="min-height: 44px; border: none; border-radius: 2px; background: #FFFFFF; color: #16223A; font-size: 11px; font-weight: 500; cursor: pointer; padding: 0">{{seat.n}}</button>
+</sc-if>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #E3DED2; border-radius: 4px; box-shadow: none; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="height: 140px; background: #E7E1D3; border-radius: 2px; display: flex; align-items: center; justify-content: center; color: #5A4E36; font-size: 12px">[{{sel.n}}, 2006]</div>
+<span style="font-size: 12px; color: #5A6170; text-align: center">Ngày ấy</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="height: 140px; background: #DDE3EE; border-radius: 2px; display: flex; align-items: center; justify-content: center; color: #24304A; font-size: 12px">[{{sel.n}}, 2026]</div>
+<span style="font-size: 12px; color: #5A6170; text-align: center">Bây giờ</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600">{{sel.full}}</span>
+<span style="font-size: 13px; color: #5A6170">Biệt danh: <strong style="color: #8A6224">{{sel.nick}}</strong> · {{sel.city}}</span>
+</div>
+<div style="font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 22px; color: #16223A; line-height: 1.35">“{{sel.quote}}”</div>
+</div>
+</section>
+
+<!-- KHO ẢNH XƯA -->
+<section style="padding: 36px 16px 0; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 20px; color: #8A6224">Ai còn giữ ảnh thì gửi nhé</span>
+<h2 style="margin: 0; font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600">Kho ảnh xưa</h2>
+</div>
+<div style="display: flex; gap: 6px; flex-wrap: wrap">
+<span style="min-height: 34px; display: flex; align-items: center; padding: 0 14px; border-radius: 2px; background: #16223A; color: #FFFFFF; font-size: 13px; font-weight: 600">Lớp 10</span>
+<span style="min-height: 34px; display: flex; align-items: center; padding: 0 14px; border-radius: 2px; border: 1px solid #E3DED2; background: #FFFFFF; font-size: 13px">Lớp 11</span>
+<span style="min-height: 34px; display: flex; align-items: center; padding: 0 14px; border-radius: 2px; border: 1px solid #E3DED2; background: #FFFFFF; font-size: 13px">Lớp 12</span>
+<span style="min-height: 34px; display: flex; align-items: center; padding: 0 14px; border-radius: 2px; border: 1px solid #E3DED2; background: #FFFFFF; font-size: 13px">Cắm trại</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<div style="height: 104px; background: #E7E1D3; border-radius: 2px"></div>
+<div style="height: 104px; background: #E7E1D3; border-radius: 2px"></div>
+<div style="height: 104px; background: #E7E1D3; border-radius: 2px"></div>
+<div style="height: 104px; background: #E7E1D3; border-radius: 2px"></div>
+<div style="height: 104px; background: #E7E1D3; border-radius: 2px"></div>
+<div style="height: 104px; background: #DDE3EE; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #24304A">+447</div>
+</div>
+</section>
+
+<footer style="margin-top: auto; padding: 32px 20px 28px; display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center">
+<span style="font-size: 12px; color: #5A6170">Mẫu giao diện: <strong style="color: #16223A">Thanh lịch</strong></span>
+<span style="font-size: 12px; color: #5A6170">Ảnh lớn, xanh than, vàng đồng. Hợp hội khóa, gói tên miền riêng.</span>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":2000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { seat: 3 };
+  }
+  renderVals() {
+    var people = [
+      ['Hùng','Nguyễn Văn Hùng','Hùng Còi','Đà Nẵng','Ai đi xa nhất thì phải về sớm nhất!'],
+      ['Lan','Phạm Thị Lan','Lan Béo','Hà Nội','Nhớ mãi mùa phượng năm ấy.'],
+      ['Tuấn','Lê Anh Tuấn','Tuấn Đen','TP.HCM','Lớp mình mãi là số một.'],
+      ['Mai','Đỗ Thị Mai','Mai Mực','Hà Nội','Đừng quên nhau nhé.'],
+      ['Dũng','Trần Quốc Dũng','Dũng Xoăn','Hải Phòng','Ra trường rồi vẫn nợ cô bài kiểm tra.'],
+      ['Hà','Vũ Thu Hà','Hà Kều','Hà Nội','Thanh xuân là có các cậu.'],
+      ['Nam','Bùi Hoài Nam','Nam Toán','Singapore','Giải xong đề rồi mới được về.'],
+      ['Long','Đặng Văn Long','Long Mập','Hà Nội','Ai trực nhật hôm nay?'],
+      ['Thảo','Ngô Phương Thảo','Thảo Lớp Phó','Hà Nội','Sổ đầu bài vẫn còn đây.'],
+      ['Quân','Hoàng Minh Quân','Quân Bóng','Đà Nẵng','Chiều nay đá bóng không?'],
+      ['Ngọc','Lý Bảo Ngọc','Ngọc Nhí','Hà Nội','Cười lên nào!'],
+      ['Phong','Phan Thanh Phong','Phong Guitar','Huế','Hát lại bài năm ấy đi.'],
+      ['Huyền','Mạc Thu Huyền','Huyền Tóc Dài','Hà Nội','Nhớ căng tin cô Tư.'],
+      ['Đức','Tạ Minh Đức','Đức Ngủ Gật','TP.HCM','Tiết đầu là để ngủ.'],
+      ['Linh','Cao Mỹ Linh','Linh Lém','Hà Nội','Hẹn nhau mùng 4 Tết.'],
+      ['Khoa','Đinh Đăng Khoa','Khoa Kính','Hà Nội','Mượn vở chép bài với.'],
+      ['Trang','Lương Thu Trang','Trang Văn','Bắc Ninh','Bài văn cuối cùng viết về các cậu.'],
+      ['Sơn','Kiều Hải Sơn','Sơn Lớp Trưởng','Hà Nội','Cả lớp trật tự!']
+    ];
+    var self = this;
+    var sel = this.state.seat;
+    var rows = [];
+    for (var r = 0; r < 3; r++) {
+      var desks = [];
+      for (var d = 0; d < 3; d++) {
+        var seats = [];
+        for (var s = 0; s < 2; s++) {
+          (function (i) {
+            var p = people[i];
+            seats.push({ n: p[0], full: p[1], selected: i === sel, idle: i !== sel, pick: function () { self.setState({ seat: i }); } });
+          })(r * 6 + d * 2 + s);
+        }
+        desks.push({ seats: seats });
+      }
+      rows.push({ desks: desks });
+    }
+    var sp = people[sel];
+    return { rows: rows, sel: { n: sp[0], full: sp[1], nick: sp[2], city: sp[3], quote: sp[4] } };
+  }
+}
+</script>
+</body>
+</html>

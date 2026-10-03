@@ -1,0 +1,63 @@
+{
+  "hoai-niem": {
+    "ten": "Hoài niệm",
+    "moTa": "Giấy cũ, mực tím, chữ viết tay. Hợp lớp 20–30 năm.",
+    "kieuBia": "polaroid",
+    "font": {
+      "body": "'Be Vietnam Pro', sans-serif",
+      "display": "'Playfair Display', serif",
+      "displayWeight": 700,
+      "hand": "'Dancing Script', cursive",
+      "googleFonts": "family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Dancing+Script:wght@600"
+    },
+    "mau": {
+      "bg": "#F5EFE3", "card": "#FFFDF8", "ink": "#2B2140", "muted": "#5E5670", "line": "#E2D8C6",
+      "primary": "#4A2C82", "onPrimaryMuted": "#E4DAF5", "onPrimaryLine": "#B9A6DD",
+      "accent": "#B83A26", "seatSelected": "#B83A26", "board": "#2F4A3A", "desk": "#EFE6D4", "seat": "#FFFDF8",
+      "photoOld": "#E6DCC8", "photoOldInk": "#574D3B", "photoNew": "#DCD3EC", "photoNewInk": "#3E2F5E"
+    },
+    "bo": { "sm": "8px", "md": "14px", "seat": "6px", "pill": "999px" },
+    "bong": { "card": "none", "strong": "none" }
+  },
+  "tuoi-sang": {
+    "ten": "Tươi sáng",
+    "moTa": "Khối màu, bo tròn, nhãn dán vui. Hợp lớp 5–15 năm.",
+    "kieuBia": "khoi-mau",
+    "font": {
+      "body": "'Be Vietnam Pro', sans-serif",
+      "display": "'Baloo 2', sans-serif",
+      "displayWeight": 800,
+      "hand": "'Pacifico', cursive",
+      "googleFonts": "family=Be+Vietnam+Pro:wght@400;500;600;700&family=Baloo+2:wght@600;700;800&family=Pacifico"
+    },
+    "mau": {
+      "bg": "#FFF7EA", "card": "#FFFFFF", "ink": "#22203A", "muted": "#5C5873", "line": "#F2E3C9",
+      "primary": "#5B3FD6", "onPrimaryMuted": "#EAE4FF", "onPrimaryLine": "#C9BCF5",
+      "accent": "#D63A20", "seatSelected": "#D63A20", "board": "#1F7A5A", "desk": "#FFE9B8", "seat": "#FFFFFF",
+      "photoOld": "#FFE1C2", "photoOldInk": "#7A4A1A", "photoNew": "#D6ECFF", "photoNewInk": "#1D4A78"
+    },
+    "bo": { "sm": "14px", "md": "24px", "seat": "10px", "pill": "999px" },
+    "bong": { "card": "0 5px 0 #F2D9A8", "strong": "0 6px 0 #3F27A8" }
+  },
+  "thanh-lich": {
+    "ten": "Thanh lịch",
+    "moTa": "Ảnh lớn, xanh than, vàng đồng. Hợp hội khóa, gói tên miền riêng.",
+    "kieuBia": "tran-khung",
+    "font": {
+      "body": "'Be Vietnam Pro', sans-serif",
+      "display": "'Cormorant Garamond', serif",
+      "displayWeight": 600,
+      "hand": "'Cormorant Garamond', serif",
+      "handItalic": true,
+      "googleFonts": "family=Be+Vietnam+Pro:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500"
+    },
+    "mau": {
+      "bg": "#F7F6F2", "card": "#FFFFFF", "ink": "#16223A", "muted": "#5A6170", "line": "#E3DED2",
+      "primary": "#16223A", "onPrimaryMuted": "#E2C58F", "onPrimaryLine": "#6B7690",
+      "accent": "#8A6224", "seatSelected": "#16223A", "board": "#16223A", "desk": "#EFEBE1", "seat": "#FFFFFF",
+      "photoOld": "#E7E1D3", "photoOldInk": "#5A4E36", "photoNew": "#DDE3EE", "photoNewInk": "#24304A"
+    },
+    "bo": { "sm": "2px", "md": "4px", "seat": "2px", "pill": "2px" },
+    "bong": { "card": "none", "strong": "none" }
+  }
+}
