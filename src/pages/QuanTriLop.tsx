@@ -163,13 +163,12 @@ export function SuaSoDo({ lopId, thanhVien }: { lopId: string; thanhVien: ThanhV
           <input id="sd-cho" type="number" min={1} max={4} value={sd.cho_moi_ban} onChange={(e) => datKichThuoc('cho_moi_ban', +e.target.value)} /></div>
       </div>
       <p className="qt-mo" style={{ fontSize: 13 }}>
-        {soCho} chỗ · {thanhVien.length} bạn · còn {chuaXep.length} bạn chưa xếp · {Math.max(0, soChoTrong)} chỗ trống. Bấm vào một chỗ để chọn bạn ngồi đó.
+        {soCho} chỗ · {thanhVien.length} bạn · còn {chuaXep.length} bạn chưa xếp. Bấm vào một chỗ để chọn bạn ngồi đó.
       </p>
       {thieuCho > 0 && (
         <div className="qt-canh-bao" role="status">
-          Thiếu {thieuCho} chỗ cho các bạn chưa xếp.
+          Thiếu {thieuCho} chỗ. Thêm dãy hoặc thêm bàn cho đủ.
           <button className="qt-nut nho" onClick={themDayChoDu}>Thêm dãy cho đủ chỗ</button>
-          <span>Hoặc cứ để vậy: các bạn không có chỗ vẫn hiện ở dòng “Các bạn khác của lớp” dưới sơ đồ.</span>
         </div>
       )}
 

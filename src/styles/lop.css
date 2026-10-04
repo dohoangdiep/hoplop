@@ -109,7 +109,6 @@
 }
 .cho[aria-pressed='true'] { background: var(--mau-seat-selected); color: #fff; font-weight: 700; }
 .cho:disabled { background: transparent; border: 1px dashed var(--mau-line); cursor: default; }
-.ban-khac { display: flex; flex-direction: column; gap: 8px; }
 
 .ho-so { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .ho-so .hai-anh { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
