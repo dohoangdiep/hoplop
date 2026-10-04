@@ -62,7 +62,7 @@ export async function guiAnh(
   files: File[],
   tt: ThongTinGui,
   baoTienDo: (i: number, trangThai: TrangThaiAnh) => void,
-): Promise<{ thanhCong: number; loi?: string }> {
+): Promise<{ thanhCong: number; loi?: string; ids: string[] }> {
   const { data, error } = await supabase.rpc('tao_luot_gui', {
     p_khoa: tt.khoa,
     p_so_anh: files.length,
@@ -73,7 +73,7 @@ export async function guiAnh(
     p_nguoi_gui: tt.nguoiGui ?? null,
     p_kieu_goc: files.map(duoiFile),
   })
-  if (error) return { thanhCong: 0, loi: 'Không kết nối được, bạn thử lại nhé.' }
+  if (error) return { thanhCong: 0, loi: 'Không kết nối được, bạn thử lại nhé.', ids: [] }
   if (data?.loi) {
     const thongBao: Record<string, string> = {
       'can-mat-khau': 'Mật khẩu lớp chưa đúng.',
@@ -83,11 +83,12 @@ export async function guiAnh(
       'so-anh': `Mỗi lần gửi tối đa ${TOI_DA_ANH} ảnh.`,
       'khong-tim-thay': 'Không tìm thấy lớp hoặc lớp đang ở chế độ chỉ xem.',
     }
-    return { thanhCong: 0, loi: thongBao[data.loi] ?? 'Có lỗi, bạn thử lại nhé.' }
+    return { thanhCong: 0, loi: thongBao[data.loi] ?? 'Có lỗi, bạn thử lại nhé.', ids: [] }
   }
 
   const luot: { id: string; xem: string; goc: string }[] = data.anh
   let thanhCong = 0
+  const ids: string[] = []
   for (let i = 0; i < files.length; i++) {
     const f = files[i]
     try {
@@ -102,9 +103,10 @@ export async function guiAnh(
       await supabase.rpc('xong_tai_anh', { p_anh_id: luot[i].id, p_rong: rong, p_cao: cao, p_dung_luong: f.size })
       baoTienDo(i, 'xong')
       thanhCong++
+      ids.push(luot[i].id)
     } catch {
       baoTienDo(i, 'loi')
     }
   }
-  return { thanhCong }
+  return { thanhCong, ids }
 }

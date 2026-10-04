@@ -1,0 +1,129 @@
+import { supabase } from './supabase'
+import { guiAnh } from './guiAnh'
+import { veCanh, veChanDung, taoRng, type KieuCanh } from './veAnhDemo'
+import {
+  dsThanhVien, themThanhVien, phanTichDanhSach, laySoDo, luuSoDo, khoaCho,
+  ganAnhChoBan, datAnhBia, type LopQuanTri,
+} from './quanTri'
+
+const DS_DEMO = `Nguyễn Văn Hùng | Hùng Còi | Đà Nẵng | Ai đi xa nhất thì phải về sớm nhất!
+Phạm Thị Lan | Lan Béo | Hà Nội | Nhớ mãi mùa phượng năm ấy.
+Lê Anh Tuấn | Tuấn Đen | TP.HCM | Lớp mình mãi là số một.
+Đỗ Thị Mai | Mai Mực | Hà Nội | Đừng quên nhau nhé.
+Trần Quốc Dũng | Dũng Xoăn | Hải Phòng | Ra trường rồi vẫn nợ cô bài kiểm tra.
+Vũ Thu Hà | Hà Kều | Hà Nội | Thanh xuân là có các cậu.
+Bùi Hoài Nam | Nam Toán | Singapore | Giải xong đề rồi mới được về.
+Đặng Văn Long | Long Mập | Hà Nội | Ai trực nhật hôm nay?
+Ngô Phương Thảo | Thảo Lớp Phó | Hà Nội | Sổ đầu bài vẫn còn đây.
+Hoàng Minh Quân | Quân Bóng | Đà Nẵng | Chiều nay đá bóng không?
+Lý Bảo Ngọc | Ngọc Nhí | Hà Nội | Cười lên nào!
+Phan Thanh Phong | Phong Guitar | Huế | Hát lại bài năm ấy đi.
+Mạc Thu Huyền | Huyền Tóc Dài | Hà Nội | Nhớ căng tin cô Tư.
+Tạ Minh Đức | Đức Ngủ Gật | TP.HCM | Tiết đầu là để ngủ.
+Cao Mỹ Linh | Linh Lém | Hà Nội | Hẹn nhau mùng 4 Tết.
+Đinh Đăng Khoa | Khoa Kính | Hà Nội | Mượn vở chép bài với.
+Lương Thu Trang | Trang Văn | Bắc Ninh | Bài văn cuối cùng viết về các cậu.
+Kiều Hải Sơn | Sơn Lớp Trưởng | Hà Nội | Cả lớp trật tự!
+Hồ Hải Yến | Yến Nhút Nhát | Úc | Xa mấy cũng nhớ lớp.
+Chu Quốc Việt | Việt Chạy | Hà Nội | Ai về chậm nhất thì trả tiền.
+Mai Thị Hoa | Hoa Phượng | Nghệ An | Phượng vẫn nở mỗi tháng Năm.
+Triệu Thanh Bình | Bình Bóng Bàn | Hà Nội | Chơi một ván nữa thôi.
+Âu Tường Vy | Vy Vẽ | Hà Nội | Vẽ lại sơ đồ lớp này là tớ đấy.
+Lâm Trung Kiên | Kiên Đô | Hải Dương | Năm sau tớ bao.`
+
+const NU = /\b(Thị|Thu|Lan|Mai|Hà|Thảo|Ngọc|Huyền|Linh|Trang|Yến|Hoa|Vy|Nga|Châu)\b/
+
+/** Kế hoạch ảnh xưa: mục, kiểu cảnh, chú thích. */
+function keHoachAnhXua(nam: number): { muc: string; kieu: KieuCanh; chuThich: string; nhan?: string }[] {
+  return [
+    { muc: 'lop-10', kieu: 'lop-hoc', chuThich: `Buổi học đầu tiên năm lớp 10`, nhan: `Ngày 5 tháng 9 năm ${nam - 3}` },
+    { muc: 'lop-10', kieu: 'van-nghe', chuThich: 'Văn nghệ chào mừng 20/11' },
+    { muc: 'lop-10', kieu: 'san-truong', chuThich: 'Giờ ra chơi dưới gốc phượng' },
+    { muc: 'lop-11', kieu: 'cam-trai', chuThich: 'Hội trại 26/3, lớp mình dựng trại đẹp nhất' },
+    { muc: 'lop-11', kieu: 'lop-hoc', chuThich: 'Tiết Văn của cô chủ nhiệm', nhan: 'Bài 12: Tuổi trẻ và tương lai' },
+    { muc: 'lop-11', kieu: 'san-truong', chuThich: 'Lao động trồng cây' },
+    { muc: 'lop-12', kieu: 'lop-hoc', chuThich: 'Những ngày ôn thi', nhan: `Còn 45 ngày thi tốt nghiệp` },
+    { muc: 'lop-12', kieu: 'tap-the', chuThich: 'Chụp ảnh kỷ yếu' },
+    { muc: 'lop-12', kieu: 'san-truong', chuThich: 'Áo trắng sân trường' },
+    { muc: 'cam-trai', kieu: 'cam-trai', chuThich: 'Lửa trại đêm cuối', nhan: 'Đêm lửa trại' },
+    { muc: 'cam-trai', kieu: 'cam-trai', chuThich: 'Cả lớp hát quanh đống lửa', nhan: 'Trại hè Ba Vì' },
+    { muc: 'be-giang', kieu: 'be-giang', chuThich: 'Lễ bế giảng' },
+    { muc: 'be-giang', kieu: 'tap-the', chuThich: 'Ảnh tập thể ngày bế giảng' },
+    { muc: 'be-giang', kieu: 'san-truong', chuThich: 'Lần cuối mặc áo trắng' },
+  ]
+}
+
+export async function napDemo(lop: LopQuanTri, bao: (text: string) => void): Promise<{ soAnh: number }> {
+  const nam = lop.nien_khoa_ket_thuc ?? 2006
+  const seedLop = [...lop.id].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) >>> 0, 7)
+  let soAnh = 0
+  const gui1 = async (file: File, opts: { muc?: string; chuThich?: string; maQr?: string }) => {
+    const r = await guiAnh([file], { khoa: lop.ma, nguoiGui: 'Ảnh minh họa', ...opts }, () => {})
+    if (r.loi) throw new Error(r.loi)
+    soAnh += r.ids.length
+    return r.ids[0]
+  }
+
+  // 1. Thành viên + sơ đồ (chỉ khi lớp chưa có ai)
+  let tv = await dsThanhVien(lop.id)
+  if (!tv.length) {
+    bao('Đang thêm 24 bạn mẫu và xếp sơ đồ…')
+    await themThanhVien(lop.id, phanTichDanhSach(DS_DEMO), 0)
+    tv = await dsThanhVien(lop.id)
+    const sd = await laySoDo(lop.id)
+    const so = { so_day: 4, so_ban_moi_day: 3, cho_moi_ban: 2, cho: {} as Record<string, string | null> }
+    let i = 0
+    for (let d = 0; d < 4; d++) for (let b = 0; b < 3; b++) for (let v = 0; v < 2; v++) so.cho[khoaCho(d, b, v)] = tv[i++]?.id ?? null
+    await luuSoDo(lop.id, { ...sd, ...so })
+  }
+
+  // 2. Kho ảnh xưa + ảnh bìa
+  const ke = keHoachAnhXua(nam)
+  let anhBia: string | undefined
+  for (let i = 0; i < ke.length; i++) {
+    bao(`Đang vẽ và tải ảnh xưa ${i + 1}/${ke.length}…`)
+    const k = ke[i]
+    const file = await veCanh(k.kieu, seedLop + i * 101, lop.ten_lop, nam, k.nhan)
+    const id = await gui1(file, { muc: k.muc, chuThich: `${k.chuThich} (ảnh minh họa)` })
+    if (k.kieu === 'tap-the' && k.muc === 'be-giang') anhBia = id
+  }
+  if (anhBia) await datAnhBia(lop.id, anhBia)
+
+  // 3. Chân dung ngày ấy – bây giờ cho từng bạn
+  const dsChanDung = tv.slice(0, 40)
+  for (let i = 0; i < dsChanDung.length; i++) {
+    const t = dsChanDung[i]
+    bao(`Đang vẽ chân dung ${i + 1}/${dsChanDung.length}: ${t.ho_ten}…`)
+    const seed = seedLop + 5000 + i * 13
+    const nu = NU.test(t.ho_ten) || (!/\bVăn\b/.test(t.ho_ten) && taoRng(seed)() < 0.4)
+    const xua = await gui1(await veChanDung(seed, nu, 'xua', nam), { muc: 'chan-dung', chuThich: `${t.ho_ten} ngày ấy (ảnh minh họa)` })
+    const nay = await gui1(await veChanDung(seed, nu, 'nay', nam), { muc: 'chan-dung', chuThich: `${t.ho_ten} bây giờ (ảnh minh họa)` })
+    if (xua) await ganAnhChoBan(t.id, 'anh_xua_id', xua)
+    if (nay) await ganAnhChoBan(t.id, 'anh_nay_id', nay)
+  }
+
+  // 4. Hai chương: một lần họp đã qua (có ảnh) và một lần sắp tới
+  bao('Đang tạo các lần họp lớp…')
+  const homNay = new Date()
+  const namTruoc = homNay.getFullYear() - 1
+  const soNamTruoc = namTruoc - nam
+  const { data: chQua, error: e1 } = await supabase.from('chuong').insert({
+    lop_id: lop.id, tieu_de: `Họp lớp ${soNamTruoc} năm · Tết ${namTruoc}`, ngay: `${namTruoc}-02-${String(10 + (seedLop % 10)).padStart(2, '0')}`,
+    dia_diem: 'Nhà hàng [Tên nhà hàng]', thu_tu: 1,
+  }).select('id, ma_qr').single()
+  if (e1) throw e1
+  const ngaySap = new Date(homNay.getTime() + 1000 * 86400 * (40 + (seedLop % 40)))
+  const { error: e2 } = await supabase.from('chuong').insert({
+    lop_id: lop.id, tieu_de: `Họp lớp ${ngaySap.getFullYear() - nam} năm`, ngay: ngaySap.toISOString().slice(0, 10),
+    dia_diem: 'Nhà hàng [Tên nhà hàng]', thu_tu: 2,
+  })
+  if (e2) throw e2
+  for (let i = 0; i < 4; i++) {
+    bao(`Đang tải ảnh buổi họp ${i + 1}/4…`)
+    const file = await veCanh('hop-lop', seedLop + 9000 + i * 7, lop.ten_lop, namTruoc, `HỌP LỚP ${lop.ten_lop.toUpperCase()} · ${soNamTruoc} NĂM`)
+    await gui1(file, { maQr: chQua.ma_qr, chuThich: 'Buổi họp lớp (ảnh minh họa)' })
+  }
+
+  bao(`Xong! Đã nạp ${soAnh} ảnh demo.`)
+  return { soAnh }
+}

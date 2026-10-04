@@ -8,7 +8,7 @@ import {
   type LopQuanTri,
 } from '../lib/quanTri'
 import { DANH_SACH_GIAO_DIEN, GIAO_DIEN, type MaGiaoDien } from '../themes'
-import { QuanLyThanhVien, SuaSoDo, QuanLyAnh } from './QuanTriLop'
+import { QuanLyThanhVien, SuaSoDo, QuanLyAnh, NutNapDemo } from './QuanTriLop'
 import type { ThanhVienQT } from '../lib/quanTri'
 import '../styles/quantri.css'
 
@@ -121,6 +121,13 @@ function DanhSach() {
             </li>
           ))}
         </ul>
+      )}
+      {ds && ds.length > 0 && (
+        <section className="qt-muc">
+          <h2>Dữ liệu demo</h2>
+          <p className="qt-mo" style={{ fontSize: 13, margin: 0 }}>Vẽ ảnh hoạt hình minh họa (ảnh xưa, chân dung từng bạn, buổi họp lớp) rồi tải lên và duyệt sẵn cho tất cả lớp.</p>
+          <NutNapDemo lops={ds} nhan={`Nạp ảnh demo cho cả ${ds.length} lớp`} />
+        </section>
       )}
     </main>
   )
@@ -270,6 +277,11 @@ function ChiTietLop() {
       <QuanLyThanhVien lopId={lop.id} onDoi={setThanhVien} />
       <SuaSoDo lopId={lop.id} thanhVien={thanhVien} />
       <QuanLyAnh lopId={lop.id} maLop={lop.ma} thanhVien={thanhVien} />
+
+      <section className="qt-muc">
+        <h2>Dữ liệu demo</h2>
+        <NutNapDemo lops={[lop]} nhan="Nạp ảnh demo cho lớp này" />
+      </section>
 
       <section className="qt-muc qt-mo">
         <h2>Sắp có</h2>

@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   dsThanhVien, phanTichDanhSach, themThanhVien, suaThanhVien, xoaThanhVien,
   laySoDo, luuSoDo, khoaCho, type ThanhVienQT, type SoDoQT,
-  dsAnh, capNhatAnh, capNhatNhieuAnh, ganAnhChoBan, datAnhBia, type AnhQT,
+  dsAnh, capNhatAnh, capNhatNhieuAnh, ganAnhChoBan, datAnhBia, type AnhQT, type LopQuanTri,
 } from '../lib/quanTri'
+import { napDemo } from '../lib/napDemo'
 import { linkXemNhieu, linkTaiGoc } from '../lib/storage'
 import { MUC_ANH, TEN_MUC } from '../lib/guiAnh'
 
@@ -334,5 +335,30 @@ export function QuanLyAnh({ lopId, maLop, thanhVien }: { lopId: string; maLop: s
       )}
       {loi && <p className="qt-loi" role="alert">{loi}</p>}
     </section>
+  )
+}
+
+/* ---------------- Dữ liệu demo ---------------- */
+export function NutNapDemo({ lops, nhan }: { lops: LopQuanTri[]; nhan: string }) {
+  const [dang, setDang] = useState(false)
+  const [tienDo, setTienDo] = useState('')
+  const [loi, setLoi] = useState('')
+  const chay = async () => {
+    if (!window.confirm(`Nạp khoảng 70 ảnh hoạt hình minh họa (duyệt sẵn) vào ${lops.length} lớp? Lớp chưa có thành viên sẽ được thêm 24 bạn mẫu. Giữ trang mở đến khi xong.`)) return
+    setDang(true); setLoi('')
+    try {
+      for (let i = 0; i < lops.length; i++) {
+        const l = lops[i]
+        await napDemo(l, (t) => setTienDo(lops.length > 1 ? `Lớp ${l.ten_lop} (${i + 1}/${lops.length}): ${t}` : t))
+      }
+      setTienDo((t) => t + ' Tải lại trang để xem.')
+    } catch (e) { setLoi((e as Error).message) } finally { setDang(false) }
+  }
+  return (
+    <div className="qt-form" style={{ marginTop: 8 }}>
+      <button className="qt-nut" onClick={chay} disabled={dang}>{dang ? 'Đang nạp…' : nhan}</button>
+      {tienDo && <p className="qt-mo" role="status" style={{ margin: 0, fontSize: 13 }}>{tienDo}</p>}
+      {loi && <p className="qt-loi" role="alert">{loi}</p>}
+    </div>
   )
 }
