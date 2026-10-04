@@ -6,20 +6,25 @@ import { supabase } from './supabase'
 
 const BUCKET = 'anh'
 
-export function duongDanAnh(lopId: string, loai: 'xua' | 'chuong', anhId: string, ban: 'goc' | 'xem') {
-  return `lop/${lopId}/${loai}/${anhId}/${ban}.jpg`
+export async function taiLen(duongDan: string, file: Blob, kieu: string) {
+  const { error } = await supabase.storage.from(BUCKET).upload(duongDan, file, { contentType: kieu, upsert: false })
+  // Lần thử trước đã tải xong nhưng mất phản hồi: file đã có, coi như thành công
+  if (error && !/exists|duplicate/i.test(error.message)) throw error
 }
 
-export async function taiLen(duongDan: string, file: Blob) {
-  const { error } = await supabase.storage.from(BUCKET).upload(duongDan, file, {
-    contentType: 'image/jpeg',
-    upsert: false,
-  })
-  if (error) throw error
+/** Ký link xem có hạn cho nhiều ảnh cùng lúc. Trả về map đường dẫn -> url. */
+export async function linkXemNhieu(duongDan: string[], giay = 3600): Promise<Record<string, string>> {
+  const ds = [...new Set(duongDan.filter(Boolean))]
+  if (!ds.length) return {}
+  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrls(ds, giay)
+  if (error || !data) return {}
+  const kq: Record<string, string> = {}
+  for (const d of data) if (d.path && d.signedUrl) kq[d.path] = d.signedUrl
+  return kq
 }
 
-export async function linkXem(duongDan: string, giay = 3600): Promise<string> {
-  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(duongDan, giay)
-  if (error) throw error
-  return data.signedUrl
+/** Link tải bản gốc (chỉ quản trị có quyền đọc bản gốc). */
+export async function linkTaiGoc(duongDan: string, tenFile: string): Promise<string | null> {
+  const { data } = await supabase.storage.from(BUCKET).createSignedUrl(duongDan, 600, { download: tenFile })
+  return data?.signedUrl ?? null
 }

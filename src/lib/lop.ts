@@ -2,6 +2,8 @@ import { supabase } from './supabase'
 import type { Lop } from './types'
 import type { MaGiaoDien } from '../themes'
 import { LOP_MAU, MA_LOP_MAU } from '../data/lopMau'
+import { linkXemNhieu } from './storage'
+import { MUC_ANH } from './guiAnh'
 
 export type KetQuaMoLop =
   | { trangThai: 'ok'; lop: Lop }
@@ -72,5 +74,38 @@ export async function moLop(khoa: string, matKhau?: string): Promise<KetQuaMoLop
     return { trangThai: 'can-mat-khau', xemTruoc: chuyenLop(data), daNhapSai: !!matKhau }
   }
   if (mk) luuMatKhau(k, mk)
-  return { trangThai: 'ok', lop: chuyenLop(data) }
+  return { trangThai: 'ok', lop: await ganAnh(chuyenLop(data), data) }
+}
+
+/** Ký link xem cho mọi ảnh của lớp rồi gắn vào thành viên, kho ảnh xưa, ảnh bìa. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function ganAnh(lop: Lop, d: any): Promise<Lop> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const anh: any[] = d.anh ?? []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tv: any[] = d.thanh_vien ?? []
+  const url = await linkXemNhieu([
+    ...anh.map((a) => a.xem),
+    ...tv.flatMap((t) => [t.anh_xua, t.anh_nay]),
+    d.lop?.anh_bia,
+  ])
+  const xua = anh.filter((a) => a.loai === 'xua')
+  return {
+    ...lop,
+    anhBiaUrl: d.lop?.anh_bia ? url[d.lop.anh_bia] : null,
+    soAnhDaLuu: anh.length,
+    thanhVien: lop.thanhVien.map((t, i) => ({
+      ...t,
+      anhXuaUrl: tv[i]?.anh_xua ? url[tv[i].anh_xua] : undefined,
+      anhNayUrl: tv[i]?.anh_nay ? url[tv[i].anh_nay] : undefined,
+    })),
+    khoAnhXua: MUC_ANH
+      .map((m) => ({
+        ma: m.ma,
+        ten: m.ten,
+        anh: xua.filter((a) => (a.muc ?? 'khac') === m.ma).map((a) => ({ id: a.id, chuThich: a.chu_thich ?? '', url: url[a.xem] })),
+      }))
+      .filter((m) => m.anh.length > 0),
+    chuong: lop.chuong.map((c) => ({ ...c, soAnh: anh.filter((a) => a.chuong_id === c.id).length || undefined })),
+  }
 }

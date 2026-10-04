@@ -201,3 +201,51 @@ export async function luuSoDo(lopId: string, sd: SoDoQT) {
     if (e3) throw e3
   }
 }
+
+/* ---------------- Ảnh ---------------- */
+export interface AnhQT {
+  id: string
+  loai: 'xua' | 'chuong'
+  muc: string | null
+  chu_thich: string | null
+  nguoi_gui_ten: string | null
+  trang_thai: 'cho-duyet' | 'da-duyet' | 'an'
+  duong_dan_xem: string
+  duong_dan_goc: string
+  tao_luc: string
+}
+
+export async function dsAnh(lopId: string): Promise<AnhQT[]> {
+  const { data, error } = await supabase
+    .from('anh')
+    .select('id, loai, muc, chu_thich, nguoi_gui_ten, trang_thai, duong_dan_xem, duong_dan_goc, tao_luc')
+    .eq('lop_id', lopId)
+    .eq('da_tai_xong', true)
+    .order('tao_luc', { ascending: false })
+  if (error) throw error
+  return (data ?? []) as AnhQT[]
+}
+
+export async function capNhatAnh(id: string, thayDoi: Partial<Pick<AnhQT, 'trang_thai' | 'muc' | 'chu_thich'>>) {
+  const { error } = await supabase.from('anh').update(thayDoi).eq('id', id)
+  if (error) throw error
+}
+
+export async function capNhatNhieuAnh(ids: string[], thayDoi: Partial<Pick<AnhQT, 'trang_thai' | 'muc'>>) {
+  if (!ids.length) return
+  const { error } = await supabase.from('anh').update(thayDoi).in('id', ids)
+  if (error) throw error
+}
+
+/** Gắn ảnh làm "ngày ấy" hoặc "bây giờ" của một bạn (ảnh tự được duyệt). */
+export async function ganAnhChoBan(thanhVienId: string, kieu: 'anh_xua_id' | 'anh_nay_id', anhId: string) {
+  await capNhatAnh(anhId, { trang_thai: 'da-duyet' })
+  const { error } = await supabase.from('thanh_vien').update({ [kieu]: anhId }).eq('id', thanhVienId)
+  if (error) throw error
+}
+
+export async function datAnhBia(lopId: string, anhId: string) {
+  await capNhatAnh(anhId, { trang_thai: 'da-duyet' })
+  const { error } = await supabase.from('lop').update({ anh_bia_id: anhId }).eq('id', lopId)
+  if (error) throw error
+}

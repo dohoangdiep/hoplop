@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   dsThanhVien, phanTichDanhSach, themThanhVien, suaThanhVien, xoaThanhVien,
   laySoDo, luuSoDo, khoaCho, type ThanhVienQT, type SoDoQT,
+  dsAnh, capNhatAnh, capNhatNhieuAnh, ganAnhChoBan, datAnhBia, type AnhQT,
 } from '../lib/quanTri'
+import { linkXemNhieu, linkTaiGoc } from '../lib/storage'
+import { MUC_ANH, TEN_MUC } from '../lib/guiAnh'
 
 /* ---------------- Thành viên ---------------- */
 export function QuanLyThanhVien({ lopId, onDoi }: { lopId: string; onDoi: (ds: ThanhVienQT[]) => void }) {
@@ -212,6 +215,123 @@ export function SuaSoDo({ lopId, thanhVien }: { lopId: string; thanhVien: ThanhV
         <button className="qt-nut chinh" onClick={luu}>Lưu sơ đồ</button>
       </div>
       {thongBao && <p className="qt-ok" role="status">{thongBao}</p>}
+      {loi && <p className="qt-loi" role="alert">{loi}</p>}
+    </section>
+  )
+}
+
+/* ---------------- Ảnh ---------------- */
+const TAB_ANH: { ma: AnhQT['trang_thai']; ten: string }[] = [
+  { ma: 'cho-duyet', ten: 'Chờ duyệt' },
+  { ma: 'da-duyet', ten: 'Đã duyệt' },
+  { ma: 'an', ten: 'Đã ẩn' },
+]
+
+export function QuanLyAnh({ lopId, maLop, thanhVien }: { lopId: string; maLop: string; thanhVien: ThanhVienQT[] }) {
+  const [ds, setDs] = useState<AnhQT[] | null>(null)
+  const [url, setUrl] = useState<Record<string, string>>({})
+  const [tab, setTab] = useState<AnhQT['trang_thai']>('cho-duyet')
+  const [dangMo, setDangMo] = useState<string | null>(null)
+  const [loi, setLoi] = useState('')
+
+  const tai = async () => {
+    try {
+      const d = await dsAnh(lopId)
+      setDs(d)
+      setUrl(await linkXemNhieu(d.map((a) => a.duong_dan_xem)))
+    } catch (e) { setLoi((e as Error).message) }
+  }
+  useEffect(() => { tai() }, [lopId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const lam = async (viec: () => Promise<void>) => {
+    setLoi('')
+    try { await viec(); await tai() } catch (e) { setLoi((e as Error).message) }
+  }
+
+  if (!ds) return <section className="qt-muc"><h2>Ảnh</h2><p>Đang tải…</p></section>
+  const loc = ds.filter((a) => a.trang_thai === tab)
+  const dem = (t: AnhQT['trang_thai']) => ds.filter((a) => a.trang_thai === t).length
+  const anhMo = dangMo ? ds.find((a) => a.id === dangMo) : undefined
+
+  return (
+    <section className="qt-muc">
+      <div className="qt-tieu-de">
+        <h2>Ảnh</h2>
+        <a className="qt-nut nho" href={`/${maLop}/gui-anh`} target="_blank" rel="noreferrer">Tải ảnh lên</a>
+      </div>
+      <p className="qt-mo" style={{ fontSize: 13, marginTop: 0 }}>Ảnh do quản trị tải lên được duyệt sẵn. Ảnh thành viên gửi nằm ở “Chờ duyệt”.</p>
+
+      <div className="qt-hang" role="group" aria-label="Lọc ảnh">
+        {TAB_ANH.map((t) => (
+          <button key={t.ma} className={`qt-nut nho ${tab === t.ma ? 'chinh' : ''}`} onClick={() => { setTab(t.ma); setDangMo(null) }}>
+            {t.ten} ({dem(t.ma)})
+          </button>
+        ))}
+      </div>
+
+      {tab === 'cho-duyet' && loc.length > 1 && (
+        <div className="qt-hang" style={{ marginTop: 10 }}>
+          <button className="qt-nut nho chinh" onClick={() => lam(() => capNhatNhieuAnh(loc.map((a) => a.id), { trang_thai: 'da-duyet' }))}>
+            Duyệt tất cả {loc.length} ảnh
+          </button>
+        </div>
+      )}
+
+      {loc.length === 0 ? <p className="qt-mo">Không có ảnh nào.</p> : (
+        <div className="qt-luoi-anh">
+          {loc.map((a) => (
+            <button key={a.id} type="button" className={`qt-o-anh ${dangMo === a.id ? 'dang-chon' : ''}`} onClick={() => setDangMo(dangMo === a.id ? null : a.id)}
+              aria-label={`Ảnh${a.chu_thich ? ': ' + a.chu_thich : ''}${a.nguoi_gui_ten ? ', ' + a.nguoi_gui_ten + ' gửi' : ''}`}>
+              {url[a.duong_dan_xem] ? <img src={url[a.duong_dan_xem]} alt="" loading="lazy" /> : <span>…</span>}
+              <small>{a.loai === 'xua' ? TEN_MUC[a.muc ?? 'khac'] : 'Buổi họp'}</small>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {anhMo && (
+        <div className="qt-chi-tiet-anh">
+          {url[anhMo.duong_dan_xem] && <img src={url[anhMo.duong_dan_xem]} alt={anhMo.chu_thich ?? ''} />}
+          <p className="qt-mo" style={{ margin: 0, fontSize: 13 }}>
+            {anhMo.nguoi_gui_ten ? `${anhMo.nguoi_gui_ten} gửi` : 'Không rõ người gửi'} · {new Date(anhMo.tao_luc).toLocaleString('vi-VN')}
+            {anhMo.chu_thich && <> · “{anhMo.chu_thich}”</>}
+          </p>
+
+          <div className="qt-hang">
+            {anhMo.trang_thai !== 'da-duyet' && <button className="qt-nut nho chinh" onClick={() => lam(() => capNhatAnh(anhMo.id, { trang_thai: 'da-duyet' }))}>Duyệt</button>}
+            {anhMo.trang_thai !== 'an' && <button className="qt-nut nho nguy" onClick={() => lam(() => capNhatAnh(anhMo.id, { trang_thai: 'an' }))}>Ẩn</button>}
+            <button className="qt-nut nho" onClick={async () => { const u = await linkTaiGoc(anhMo.duong_dan_goc, `anh-${anhMo.id.slice(0, 8)}`); if (u) window.open(u) }}>Tải ảnh gốc</button>
+          </div>
+
+          {anhMo.loai === 'xua' && (
+            <>
+              <label htmlFor="muc-anh" className="qt-nhan">Mục trong kho ảnh xưa</label>
+              <select id="muc-anh" value={anhMo.muc ?? 'khac'} onChange={(e) => lam(() => capNhatAnh(anhMo.id, { muc: e.target.value }))}>
+                {MUC_ANH.map((m) => <option key={m.ma} value={m.ma}>{m.ten}</option>)}
+              </select>
+            </>
+          )}
+
+          <label htmlFor="gan-ban" className="qt-nhan">Gắn làm ảnh của một bạn</label>
+          <div className="qt-hang">
+            <select id="gan-ban" defaultValue="" onChange={(e) => {
+              const [kieu, tvId] = e.target.value.split(':')
+              if (tvId) lam(() => ganAnhChoBan(tvId, kieu as 'anh_xua_id' | 'anh_nay_id', anhMo.id))
+              e.target.value = ''
+            }}>
+              <option value="">— Chọn bạn —</option>
+              <optgroup label="Làm ảnh NGÀY ẤY của">
+                {thanhVien.map((t) => <option key={'x' + t.id} value={`anh_xua_id:${t.id}`}>{t.ho_ten}</option>)}
+              </optgroup>
+              <optgroup label="Làm ảnh BÂY GIỜ của">
+                {thanhVien.map((t) => <option key={'n' + t.id} value={`anh_nay_id:${t.id}`}>{t.ho_ten}</option>)}
+              </optgroup>
+            </select>
+          </div>
+
+          <button className="qt-nut nho" onClick={() => lam(() => datAnhBia(lopId, anhMo.id))}>Đặt làm ảnh bìa của lớp</button>
+        </div>
+      )}
       {loi && <p className="qt-loi" role="alert">{loi}</p>}
     </section>
   )

@@ -7,6 +7,8 @@ export interface ThanhVien {
   bietDanh?: string
   noiO?: string
   cauLuuBut?: string
+  anhXuaUrl?: string
+  anhNayUrl?: string
 }
 
 export interface ChoNgoi {

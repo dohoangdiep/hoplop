@@ -8,7 +8,7 @@ import {
   type LopQuanTri,
 } from '../lib/quanTri'
 import { DANH_SACH_GIAO_DIEN, GIAO_DIEN, type MaGiaoDien } from '../themes'
-import { QuanLyThanhVien, SuaSoDo } from './QuanTriLop'
+import { QuanLyThanhVien, SuaSoDo, QuanLyAnh } from './QuanTriLop'
 import type { ThanhVienQT } from '../lib/quanTri'
 import '../styles/quantri.css'
 
@@ -269,10 +269,11 @@ function ChiTietLop() {
 
       <QuanLyThanhVien lopId={lop.id} onDoi={setThanhVien} />
       <SuaSoDo lopId={lop.id} thanhVien={thanhVien} />
+      <QuanLyAnh lopId={lop.id} maLop={lop.ma} thanhVien={thanhVien} />
 
       <section className="qt-muc qt-mo">
         <h2>Sắp có</h2>
-        <p>Duyệt và xếp ảnh, tạo chương họp lớp.</p>
+        <p>Tạo chương họp lớp và mã QR gửi ảnh tại buổi họp.</p>
       </section>
       {thongBao && <p className="qt-ok" role="status">{thongBao}</p>}
     </main>

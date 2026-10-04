@@ -153,11 +153,11 @@ export function SoDoChoNgoi({ lop }: { lop: Lop }) {
         <div className="the ho-so" aria-live="polite">
           <div className="hai-anh">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <div className="khung-anh xua">[{dangChon.tenGoiTat}, {lop.nienKhoaKetThuc}]</div>
+              <div className="khung-anh xua">{dangChon.anhXuaUrl ? <img src={dangChon.anhXuaUrl} alt={`${dangChon.hoTen} ngày ấy`} /> : <IconAnh />}</div>
               <span className="chu-mo" style={{ textAlign: 'center' }}>Ngày ấy</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <div className="khung-anh nay">[{dangChon.tenGoiTat}, bây giờ]</div>
+              <div className="khung-anh nay">{dangChon.anhNayUrl ? <img src={dangChon.anhNayUrl} alt={`${dangChon.hoTen} bây giờ`} /> : <IconAnh />}</div>
               <span className="chu-mo" style={{ textAlign: 'center' }}>Bây giờ</span>
             </div>
           </div>
@@ -177,30 +177,49 @@ export function SoDoChoNgoi({ lop }: { lop: Lop }) {
 
 export function KhoAnhXua({ lop }: { lop: Lop }) {
   const [tab, setTab] = useState(0)
-  if (!lop.khoAnhXua.length) return null
-  const muc = lop.khoAnhXua[tab]
+  const [phong, setPhong] = useState<{ url: string; chuThich: string } | null>(null)
+  const muc = lop.khoAnhXua[Math.min(tab, lop.khoAnhXua.length - 1)]
   return (
     <section className="muc khung">
       <div className="muc-dau">
         <span className="tieu-de-phu">Ai còn giữ ảnh thì gửi nhé</span>
         <h2 className="tieu-de">Kho ảnh xưa</h2>
       </div>
-      <div className="tab-hang" role="group" aria-label="Chọn mục ảnh">
-        {lop.khoAnhXua.map((m, i) => (
-          <button key={m.ma} type="button" className="tab" aria-pressed={i === tab} onClick={() => setTab(i)}>
-            {m.ten}
-          </button>
-        ))}
-      </div>
-      <div className="luoi-anh">
-        {muc.anh.map((a) => (
-          <figure key={a.id}>
-            <div className="khung-anh xua">{a.url ? <img src={a.url} alt={a.chuThich} /> : <IconAnh />}</div>
-            <figcaption>{a.chuThich}</figcaption>
-          </figure>
-        ))}
-      </div>
+      {muc ? (
+        <>
+          <div className="tab-hang" role="group" aria-label="Chọn mục ảnh">
+            {lop.khoAnhXua.map((m, i) => (
+              <button key={m.ma} type="button" className="tab" aria-pressed={m === muc} onClick={() => setTab(i)}>
+                {m.ten} ({m.anh.length})
+              </button>
+            ))}
+          </div>
+          <div className="luoi-anh">
+            {muc.anh.map((a) => (
+              <figure key={a.id}>
+                {a.url ? (
+                  <button type="button" className="khung-anh xua nut-anh" onClick={() => setPhong({ url: a.url!, chuThich: a.chuThich })} aria-label={`Xem lớn${a.chuThich ? ': ' + a.chuThich : ''}`}>
+                    <img src={a.url} alt="" loading="lazy" />
+                  </button>
+                ) : (
+                  <div className="khung-anh xua"><IconAnh /></div>
+                )}
+                {a.chuThich && <figcaption>{a.chuThich}</figcaption>}
+              </figure>
+            ))}
+          </div>
+        </>
+      ) : (
+        <p className="chu-mo" style={{ fontSize: 15, margin: 0 }}>Chưa có ảnh xưa nào. Bạn nào còn giữ ảnh thì gửi lên đầu tiên nhé!</p>
+      )}
       <a className="nut-gui" href={`/${lop.ma}/gui-anh`}>Gửi thêm ảnh xưa</a>
+      {phong && (
+        <div className="phong-to" role="dialog" aria-modal="true" aria-label="Ảnh phóng to" onClick={() => setPhong(null)}>
+          <img src={phong.url} alt={phong.chuThich} />
+          {phong.chuThich && <p>{phong.chuThich}</p>}
+          <button type="button" className="nut trang" onClick={() => setPhong(null)}>Đóng</button>
+        </div>
+      )}
     </section>
   )
 }
