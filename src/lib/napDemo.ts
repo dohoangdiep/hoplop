@@ -77,8 +77,15 @@ export async function napDemo(lop: LopQuanTri, bao: (text: string) => void): Pro
     await luuSoDo(lop.id, { ...sd, ...so })
   }
 
+  // Nếu lần trước dừng giữa chừng: bỏ qua phần đã có, làm tiếp phần còn thiếu
+  const { count: soCanhDaCo } = await supabase.from('anh').select('id', { count: 'exact', head: true })
+    .eq('lop_id', lop.id).eq('loai', 'xua').neq('muc', 'chan-dung').like('chu_thich', '%(ảnh minh họa)')
+  const { data: daCoAnh } = await supabase.from('thanh_vien').select('id, anh_xua_id, anh_nay_id').eq('lop_id', lop.id)
+  const coAnh = new Map((daCoAnh ?? []).map((t) => [t.id, t]))
+  const { count: soChuong } = await supabase.from('chuong').select('id', { count: 'exact', head: true }).eq('lop_id', lop.id)
+
   // 2. Kho ảnh xưa + ảnh bìa
-  const ke = keHoachAnhXua(nam)
+  const ke = (soCanhDaCo ?? 0) >= 14 ? [] : keHoachAnhXua(nam)
   let anhBia: string | undefined
   for (let i = 0; i < ke.length; i++) {
     bao(`Đang vẽ và tải ảnh xưa ${i + 1}/${ke.length}…`)
@@ -93,6 +100,8 @@ export async function napDemo(lop: LopQuanTri, bao: (text: string) => void): Pro
   const dsChanDung = tv.slice(0, 40)
   for (let i = 0; i < dsChanDung.length; i++) {
     const t = dsChanDung[i]
+    const cu = coAnh.get(t.id)
+    if (cu?.anh_xua_id && cu?.anh_nay_id) continue
     bao(`Đang vẽ chân dung ${i + 1}/${dsChanDung.length}: ${t.ho_ten}…`)
     const seed = seedLop + 5000 + i * 13
     const nu = NU.test(t.ho_ten) || (!/\bVăn\b/.test(t.ho_ten) && taoRng(seed)() < 0.4)
@@ -103,6 +112,7 @@ export async function napDemo(lop: LopQuanTri, bao: (text: string) => void): Pro
   }
 
   // 4. Hai chương: một lần họp đã qua (có ảnh) và một lần sắp tới
+  if ((soChuong ?? 0) > 0) { bao(`Xong! Đã nạp ${soAnh} ảnh demo.`); return { soAnh } }
   bao('Đang tạo các lần họp lớp…')
   const homNay = new Date()
   const namTruoc = homNay.getFullYear() - 1

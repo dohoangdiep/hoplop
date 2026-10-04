@@ -63,7 +63,7 @@ export async function guiAnh(
   tt: ThongTinGui,
   baoTienDo: (i: number, trangThai: TrangThaiAnh) => void,
 ): Promise<{ thanhCong: number; loi?: string; ids: string[] }> {
-  const { data, error } = await supabase.rpc('tao_luot_gui', {
+  const thamSo = {
     p_khoa: tt.khoa,
     p_so_anh: files.length,
     p_mat_khau: tt.matKhau ?? null,
@@ -72,8 +72,21 @@ export async function guiAnh(
     p_chu_thich: tt.chuThich ?? null,
     p_nguoi_gui: tt.nguoiGui ?? null,
     p_kieu_goc: files.map(duoiFile),
-  })
-  if (error) return { thanhCong: 0, loi: 'Không kết nối được, bạn thử lại nhé.', ids: [] }
+  }
+  let { data, error } = await supabase.rpc('tao_luot_gui', thamSo)
+  // Mạng chập chờn: thử lại tối đa 2 lần nữa
+  for (let lan = 0; error && !error.code && lan < 2; lan++) {
+    await new Promise((r) => setTimeout(r, 1500 * (lan + 1)))
+    ;({ data, error } = await supabase.rpc('tao_luot_gui', thamSo))
+  }
+  if (error) {
+    const loi = error.code === '23514'
+      ? 'Cơ sở dữ liệu chưa được cập nhật: hãy chạy file SQL mới nhất trong thư mục supabase/migrations.'
+      : error.code === 'PGRST202'
+        ? 'Thiếu hàm trên cơ sở dữ liệu: hãy chạy file SQL 0003_anh.sql.'
+        : `Không kết nối được, bạn thử lại nhé. (${error.code ?? ''} ${error.message})`
+    return { thanhCong: 0, loi, ids: [] }
+  }
   if (data?.loi) {
     const thongBao: Record<string, string> = {
       'can-mat-khau': 'Mật khẩu lớp chưa đúng.',
