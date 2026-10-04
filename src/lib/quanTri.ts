@@ -1,3 +1,5 @@
+import { linkXemNhieu } from './storage'
+import { guiAnh } from './guiAnh'
 import { supabase } from './supabase'
 import { taoMaLop } from './maLop'
 import type { MaGiaoDien } from '../themes'
@@ -107,12 +109,14 @@ export interface ThanhVienQT {
   cau_luu_but: string | null
   an_thong_tin: boolean
   thu_tu: number
+  anh_xua_id: string | null
+  anh_nay_id: string | null
 }
 
 export async function dsThanhVien(lopId: string): Promise<ThanhVienQT[]> {
   const { data, error } = await supabase
     .from('thanh_vien')
-    .select('id, ho_ten, ten_goi_tat, biet_danh, noi_o, cau_luu_but, an_thong_tin, thu_tu')
+    .select('id, ho_ten, ten_goi_tat, biet_danh, noi_o, cau_luu_but, an_thong_tin, thu_tu, anh_xua_id, anh_nay_id')
     .eq('lop_id', lopId)
     .order('thu_tu').order('ho_ten')
   if (error) throw error
@@ -248,4 +252,24 @@ export async function datAnhBia(lopId: string, anhId: string) {
   await capNhatAnh(anhId, { trang_thai: 'da-duyet' })
   const { error } = await supabase.from('lop').update({ anh_bia_id: anhId }).eq('id', lopId)
   if (error) throw error
+}
+
+/** Ký link xem cho ảnh chân dung của các bạn. Trả về map anh_id -> url. */
+export async function linkAnhThanhVien(ds: ThanhVienQT[]): Promise<Record<string, string>> {
+  const ids = ds.flatMap((t) => [t.anh_xua_id, t.anh_nay_id]).filter(Boolean) as string[]
+  if (!ids.length) return {}
+  const { data } = await supabase.from('anh').select('id, duong_dan_xem').in('id', ids)
+  const link = await linkXemNhieu((data ?? []).map((a) => a.duong_dan_xem))
+  return Object.fromEntries((data ?? []).map((a) => [a.id, link[a.duong_dan_xem]]).filter(([, u]) => u))
+}
+
+/** Tải một ảnh từ máy lên làm ảnh "ngày ấy" hoặc "bây giờ" của một bạn. */
+export async function taiAnhChoBan(lopMa: string, tv: ThanhVienQT, kieu: 'anh_xua_id' | 'anh_nay_id', file: File) {
+  const r = await guiAnh([file], {
+    khoa: lopMa, muc: 'chan-dung', nguoiGui: 'Ban liên lạc',
+    chuThich: `${tv.ho_ten} ${kieu === 'anh_xua_id' ? 'ngày ấy' : 'bây giờ'}`,
+  }, () => {})
+  if (r.loi) throw new Error(r.loi)
+  if (!r.ids[0]) throw new Error('Tải ảnh không thành công, bạn thử lại nhé.')
+  await ganAnhChoBan(tv.id, kieu, r.ids[0])
 }

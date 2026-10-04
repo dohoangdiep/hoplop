@@ -3,13 +3,16 @@ import {
   dsThanhVien, phanTichDanhSach, themThanhVien, suaThanhVien, xoaThanhVien,
   laySoDo, luuSoDo, khoaCho, type ThanhVienQT, type SoDoQT,
   dsAnh, capNhatAnh, capNhatNhieuAnh, ganAnhChoBan, datAnhBia, type AnhQT, type LopQuanTri,
+  linkAnhThanhVien, taiAnhChoBan,
 } from '../lib/quanTri'
 import { linkXemNhieu, linkTaiGoc } from '../lib/storage'
 import { MUC_ANH, TEN_MUC } from '../lib/guiAnh'
 
 /* ---------------- Thành viên ---------------- */
-export function QuanLyThanhVien({ lopId, onDoi }: { lopId: string; onDoi: (ds: ThanhVienQT[]) => void }) {
+export function QuanLyThanhVien({ lopId, lopMa, onDoi }: { lopId: string; lopMa: string; onDoi: (ds: ThanhVienQT[]) => void }) {
   const [ds, setDs] = useState<ThanhVienQT[]>([])
+  const [linkAnh, setLinkAnh] = useState<Record<string, string>>({})
+  const [dangTai, setDangTai] = useState<string | null>(null)
   const [van, setVan] = useState('')
   const [dangSua, setDangSua] = useState<string | null>(null)
   const [loi, setLoi] = useState('')
@@ -17,7 +20,17 @@ export function QuanLyThanhVien({ lopId, onDoi }: { lopId: string; onDoi: (ds: T
   const tai = async () => {
     const d = await dsThanhVien(lopId)
     setDs(d); onDoi(d)
+    setLinkAnh(await linkAnhThanhVien(d))
   }
+
+  const chonAnh = async (t: ThanhVienQT, kieu: 'anh_xua_id' | 'anh_nay_id', file?: File) => {
+    if (!file) return
+    setLoi(''); setDangTai(`${t.id}:${kieu}`)
+    try { await taiAnhChoBan(lopMa, t, kieu, file); await tai() }
+    catch (e) { setLoi(`${t.ho_ten}: ${(e as Error).message}`) }
+    finally { setDangTai(null) }
+  }
+  const soCoAnh = ds.filter((t) => t.anh_xua_id && t.anh_nay_id).length
   useEffect(() => { tai().catch((e) => setLoi(e.message)) }, [lopId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const xemTruoc = useMemo(() => phanTichDanhSach(van), [van])
@@ -46,6 +59,11 @@ export function QuanLyThanhVien({ lopId, onDoi }: { lopId: string; onDoi: (ds: T
       )}
 
       {ds.length > 0 && (
+        <p className="qt-mo" style={{ fontSize: 13, margin: '12px 0 4px' }}>
+          Bấm ô <strong>Ngày ấy</strong> / <strong>Bây giờ</strong> cạnh tên để chọn ảnh từ máy. Đã đủ 2 ảnh: {soCoAnh}/{ds.length} bạn.
+        </p>
+      )}
+      {ds.length > 0 && (
         <ul className="qt-ds-tv">
           {ds.map((t) => dangSua === t.id ? (
             <SuaMotBan key={t.id} tv={t} onXong={async () => { setDangSua(null); await tai() }} />
@@ -56,6 +74,21 @@ export function QuanLyThanhVien({ lopId, onDoi }: { lopId: string; onDoi: (ds: T
                 <span>
                   {[t.biet_danh && `“${t.biet_danh}”`, t.noi_o, t.an_thong_tin && 'ẩn nơi ở'].filter(Boolean).join(' · ') || 'Chưa có biệt danh'}
                 </span>
+              </div>
+              <div className="qt-anh-tv">
+                {(['anh_xua_id', 'anh_nay_id'] as const).map((kieu) => {
+                  const url = t[kieu] ? linkAnh[t[kieu]!] : undefined
+                  const nhan = kieu === 'anh_xua_id' ? 'Ngày ấy' : 'Bây giờ'
+                  const dang = dangTai === `${t.id}:${kieu}`
+                  return (
+                    <label key={kieu} className={'qt-o-anh' + (url ? ' co' : '')} title={`${url ? 'Đổi' : 'Thêm'} ảnh ${nhan.toLowerCase()} của ${t.ho_ten}`}>
+                      <input type="file" accept="image/*" disabled={!!dangTai}
+                        onChange={(e) => { chonAnh(t, kieu, e.target.files?.[0]); e.target.value = '' }} />
+                      {url && <img src={url} alt="" />}
+                      <span>{dang ? 'Đang tải…' : nhan}</span>
+                    </label>
+                  )
+                })}
               </div>
               <button className="qt-nut nho" onClick={() => setDangSua(t.id)}>Sửa</button>
             </li>

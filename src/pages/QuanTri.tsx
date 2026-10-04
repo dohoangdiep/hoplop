@@ -274,7 +274,7 @@ function ChiTietLop() {
         <MaQR url={url} tenFile={`qr-lop-${lop.ma}.png`} />
       </section>
 
-      <QuanLyThanhVien lopId={lop.id} onDoi={setThanhVien} />
+      <QuanLyThanhVien lopId={lop.id} lopMa={lop.ma} onDoi={setThanhVien} />
       <SuaSoDo lopId={lop.id} thanhVien={thanhVien} />
       <QuanLyAnh lopId={lop.id} maLop={lop.ma} thanhVien={thanhVien} />
 

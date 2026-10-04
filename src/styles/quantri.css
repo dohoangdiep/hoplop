@@ -79,3 +79,15 @@
 .qt-o-anh.dang-chon { border-color: #5B3FD6; }
 .qt-chi-tiet-anh { margin-top: 12px; padding: 14px; background: #fff; border: 1px solid #ECE6DA; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; }
 .qt-chi-tiet-anh img { max-width: 100%; max-height: 360px; object-fit: contain; border-radius: 8px; align-self: center; }
+
+/* Ô ảnh ngày ấy – bây giờ trong danh sách thành viên */
+.qt-ds-tv > li > div:first-child { flex: 1; min-width: 0; }
+.qt-anh-tv { display: flex; gap: 6px; flex-shrink: 0; }
+.qt-o-anh { position: relative; width: 56px; height: 56px; border: 1.5px dashed #C9BFAE; border-radius: 8px;
+  display: flex; align-items: flex-end; justify-content: center; overflow: hidden; cursor: pointer; background: #FBF8F2; }
+.qt-o-anh input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.qt-o-anh img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.qt-o-anh span { position: relative; font-size: 11px; font-weight: 600; line-height: 1.2; padding: 2px 3px; text-align: center; color: #5A5145; }
+.qt-o-anh.co { border-style: solid; border-color: #ECE6DA; }
+.qt-o-anh.co span { width: 100%; background: rgba(0,0,0,.55); color: #fff; }
+.qt-o-anh:focus-within { outline: 2px solid #1F5FAD; outline-offset: 2px; }
