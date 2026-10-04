@@ -22,7 +22,7 @@ function AnhBia({ lop }: { lop: Lop }) {
 }
 
 export function Bia({ lop, kieu }: { lop: Lop; kieu: KieuBia }) {
-  const soNam = new Date().getFullYear() - lop.nienKhoaKetThuc
+  const soNam = lop.nienKhoaKetThuc ? new Date().getFullYear() - lop.nienKhoaKetThuc : 0
   const soLanHop = lop.chuong.filter((c) => !c.sapToi).length
   const nienKhoa = `${lop.nienKhoaBatDau} – ${lop.nienKhoaKetThuc}`
 

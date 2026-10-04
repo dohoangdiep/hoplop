@@ -96,3 +96,108 @@ export async function capNhatLop(id: string, thayDoi: Partial<Pick<LopQuanTri, '
   const { error } = await supabase.from('lop').update(thayDoi).eq('id', id)
   if (error) throw error
 }
+
+/* ---------------- Thành viên ---------------- */
+export interface ThanhVienQT {
+  id: string
+  ho_ten: string
+  ten_goi_tat: string | null
+  biet_danh: string | null
+  noi_o: string | null
+  cau_luu_but: string | null
+  an_thong_tin: boolean
+  thu_tu: number
+}
+
+export async function dsThanhVien(lopId: string): Promise<ThanhVienQT[]> {
+  const { data, error } = await supabase
+    .from('thanh_vien')
+    .select('id, ho_ten, ten_goi_tat, biet_danh, noi_o, cau_luu_but, an_thong_tin, thu_tu')
+    .eq('lop_id', lopId)
+    .order('thu_tu').order('ho_ten')
+  if (error) throw error
+  return (data ?? []) as ThanhVienQT[]
+}
+
+/**
+ * Dán danh sách, mỗi dòng một bạn:
+ *   Họ tên | biệt danh | nơi ở | câu lưu bút   (chỉ Họ tên là bắt buộc)
+ * Tên gọi tắt tự lấy chữ cuối của họ tên.
+ */
+export function phanTichDanhSach(van: string) {
+  return van
+    .split('\n')
+    .map((d) => d.trim())
+    .filter(Boolean)
+    .map((d) => {
+      const [hoTen, bietDanh, noiO, cauLuuBut] = d.split('|').map((x) => x.trim())
+      const hoTenSach = hoTen.replace(/^\d+[.)]\s*/, '') // bỏ số thứ tự "1. " nếu có
+      return {
+        ho_ten: hoTenSach,
+        ten_goi_tat: hoTenSach.split(/\s+/).pop() ?? hoTenSach,
+        biet_danh: bietDanh || null,
+        noi_o: noiO || null,
+        cau_luu_but: cauLuuBut || null,
+      }
+    })
+    .filter((t) => t.ho_ten)
+}
+
+export async function themThanhVien(lopId: string, ds: ReturnType<typeof phanTichDanhSach>, batDauTu: number) {
+  if (!ds.length) return
+  const { error } = await supabase
+    .from('thanh_vien')
+    .insert(ds.map((t, i) => ({ ...t, lop_id: lopId, thu_tu: batDauTu + i })))
+  if (error) throw error
+}
+
+export async function suaThanhVien(id: string, thayDoi: Partial<Omit<ThanhVienQT, 'id'>>) {
+  const { error } = await supabase.from('thanh_vien').update(thayDoi).eq('id', id)
+  if (error) throw error
+}
+
+export async function xoaThanhVien(id: string) {
+  const { error } = await supabase.from('thanh_vien').delete().eq('id', id)
+  if (error) throw error
+}
+
+/* ---------------- Sơ đồ chỗ ngồi ---------------- */
+export interface SoDoQT {
+  so_day: number
+  so_ban_moi_day: number
+  cho_moi_ban: number
+  cho: Record<string, string | null> // khóa "day-ban-viTri" -> thanh_vien_id
+}
+
+export const khoaCho = (d: number, b: number, v: number) => `${d}-${b}-${v}`
+
+export async function laySoDo(lopId: string): Promise<SoDoQT> {
+  const [{ data: s }, { data: c, error }] = await Promise.all([
+    supabase.from('so_do').select('so_day, so_ban_moi_day, cho_moi_ban').eq('lop_id', lopId).maybeSingle(),
+    supabase.from('cho_ngoi').select('day, ban, vi_tri, thanh_vien_id').eq('lop_id', lopId),
+  ])
+  if (error) throw error
+  const cho: SoDoQT['cho'] = {}
+  for (const r of c ?? []) cho[khoaCho(r.day, r.ban, r.vi_tri)] = r.thanh_vien_id
+  return { so_day: s?.so_day ?? 5, so_ban_moi_day: s?.so_ban_moi_day ?? 3, cho_moi_ban: s?.cho_moi_ban ?? 2, cho }
+}
+
+export async function luuSoDo(lopId: string, sd: SoDoQT) {
+  const { error: e1 } = await supabase
+    .from('so_do')
+    .upsert({ lop_id: lopId, so_day: sd.so_day, so_ban_moi_day: sd.so_ban_moi_day, cho_moi_ban: sd.cho_moi_ban })
+  if (e1) throw e1
+  const { error: e2 } = await supabase.from('cho_ngoi').delete().eq('lop_id', lopId)
+  if (e2) throw e2
+  const hang = Object.entries(sd.cho)
+    .filter(([, tv]) => tv)
+    .map(([k, tv]) => {
+      const [day, ban, vi_tri] = k.split('-').map(Number)
+      return { lop_id: lopId, day, ban, vi_tri, thanh_vien_id: tv }
+    })
+    .filter((h) => h.day < sd.so_day && h.ban < sd.so_ban_moi_day && h.vi_tri < sd.cho_moi_ban)
+  if (hang.length) {
+    const { error: e3 } = await supabase.from('cho_ngoi').insert(hang)
+    if (e3) throw e3
+  }
+}

@@ -50,3 +50,24 @@
 .qt-muc { margin-top: 24px; padding-top: 16px; border-top: 1px solid #ECE6DA; }
 .qt-qr { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; margin-top: 12px; }
 .qt-qr img { background: #fff; border: 1px solid #ECE6DA; border-radius: 12px; }
+
+.qt-o-van { width: 100%; border: 1px solid #D9D1C2; border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 15px; resize: vertical; }
+.qt-ds-tv { list-style: none; padding: 0; margin: 16px 0 0; display: flex; flex-direction: column; gap: 8px; }
+.qt-ds-tv > li { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: #fff; border: 1px solid #ECE6DA; border-radius: 10px; padding: 10px 12px; }
+.qt-ds-tv > li > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.qt-ds-tv span { font-size: 13px; color: #5C5873; }
+.qt-ds-tv > li.qt-sua-tv { flex-direction: column; align-items: stretch; gap: 6px; }
+.qt-sua-tv label { font-size: 13px; font-weight: 600; }
+.qt-chon { display: flex; gap: 8px; align-items: center; font-weight: 400 !important; }
+.qt-chon input { width: auto; min-height: 0; }
+.qt-nut.nguy { border-color: #B3301A; color: #B3301A; }
+
+.qt-ba-cot { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.qt-so-do { background: #fff; border: 1px solid #ECE6DA; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow-x: auto; }
+.qt-bang-den { background: #2F4A3A; color: #fff; border-radius: 6px; text-align: center; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; padding: 8px; }
+.qt-hang-ban { display: grid; gap: 8px; }
+.qt-ban { background: #EFE6D4; border-radius: 6px; padding: 4px; display: grid; gap: 3px; }
+.qt-cho { min-height: 44px; border: 1px dashed #C9BFAE; border-radius: 5px; background: #FFFDF8; color: #8A8296; font: inherit; font-size: 11px; cursor: pointer; padding: 0 2px; overflow: hidden; }
+.qt-cho.co-nguoi { border-style: solid; color: #22203A; font-weight: 600; }
+.qt-cho.dang-chon { outline: 3px solid #5B3FD6; outline-offset: 1px; }
+.qt-chon-ban { margin-top: 10px; padding: 12px; background: #EFEAFD; border-radius: 10px; }

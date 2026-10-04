@@ -65,7 +65,7 @@ Biến môi trường: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (key
 | Quản trị lớp (1–3 người ban liên lạc) | Supabase Auth OTP qua email hoặc số điện thoại | Duyệt/ẩn ảnh, sửa thông tin lớp và sơ đồ, mở chương mới, lấy QR, đổi mật khẩu lớp |
 | Quản trị hệ thống (chủ dịch vụ) | Supabase Auth, cờ `la_quan_tri_he_thong` | Tất cả lớp: tạo lớp, dựng nội dung, gia hạn, gán tên miền |
 
-Cơ chế vào lớp của thành viên: Edge Function `vao-lop` nhận `ma` + mật khẩu (hoặc token trong QR), kiểm tra hash, trả về một token ngắn hạn mang `lop_id`. Mọi đọc ghi dữ liệu lớp đi qua RLS hoặc Edge Function kiểm tra token đó. **Không để lộ dữ liệu lớp này cho token của lớp khác.**
+Cơ chế vào lớp của thành viên (đã làm): hàm Postgres `xem_lop(p_khoa, p_mat_khau)` (security definer, migration 0002) kiểm tra bcrypt và trả về nội dung lớp dạng JSON; sai quá 10 lần/10 phút thì tạm khóa. Trình duyệt lưu mật khẩu trong localStorage để lần sau tự mở. Phần ghi (gửi ảnh qua QR) sẽ dùng hàm/Edge Function riêng kiểm tra mật khẩu hoặc `chuong.ma_qr`. Mọi đọc ghi dữ liệu lớp đi qua RLS hoặc Edge Function kiểm tra token đó. **Không để lộ dữ liệu lớp này cho token của lớp khác.**
 
 ## 6. Dữ liệu (Postgres)
 
