@@ -108,8 +108,19 @@ export function SuaSoDo({ lopId, thanhVien }: { lopId: string; thanhVien: ThanhV
   const tvTheoId = useMemo(() => new Map(thanhVien.map((t) => [t.id, t])), [thanhVien])
   if (!sd) return <section className="qt-muc"><h2>Sơ đồ chỗ ngồi</h2><p>Đang tải…</p></section>
 
-  const daXep = new Set(Object.values(sd.cho).filter(Boolean))
+  // Chỉ tính các chỗ nằm trong lưới hiện tại (khi thu nhỏ sơ đồ, chỗ ngoài lưới coi như bỏ)
+  const trongLuoi = (k: string) => {
+    const [d, b, v] = k.split('-').map(Number)
+    return d < sd.so_day && b < sd.so_ban_moi_day && v < sd.cho_moi_ban
+  }
+  const daXep = new Set(Object.entries(sd.cho).filter(([k, tv]) => tv && trongLuoi(k)).map(([, tv]) => tv))
   const chuaXep = thanhVien.filter((t) => !daXep.has(t.id))
+  const soChoTrong = sd.so_day * sd.so_ban_moi_day * sd.cho_moi_ban - daXep.size
+  const thieuCho = chuaXep.length - soChoTrong
+  const themDayChoDu = () => {
+    const can = Math.ceil((thanhVien.length) / (sd.so_ban_moi_day * sd.cho_moi_ban))
+    setSd({ ...sd, so_day: Math.min(12, Math.max(sd.so_day, can)) })
+  }
 
   const datKichThuoc = (k: 'so_day' | 'so_ban_moi_day' | 'cho_moi_ban', v: number) =>
     setSd({ ...sd, [k]: Math.max(1, Math.min(k === 'cho_moi_ban' ? 4 : 12, v || 1)) })
@@ -133,7 +144,9 @@ export function SuaSoDo({ lopId, thanhVien }: { lopId: string; thanhVien: ThanhV
 
   const luu = async () => {
     setLoi('')
-    try { await luuSoDo(lopId, sd); setThongBao('Đã lưu sơ đồ.') } catch (e) { setLoi((e as Error).message) }
+    // Bỏ các chỗ ngoài lưới và các bạn đã bị xóa khỏi lớp
+    const cho = Object.fromEntries(Object.entries(sd.cho).filter(([k, tv]) => tv && trongLuoi(k) && tvTheoId.has(tv)))
+    try { await luuSoDo(lopId, { ...sd, cho }); setSd({ ...sd, cho }); setThongBao('Đã lưu sơ đồ.') } catch (e) { setLoi((e as Error).message) }
   }
 
   const soCho = sd.so_day * sd.so_ban_moi_day * sd.cho_moi_ban
@@ -150,8 +163,15 @@ export function SuaSoDo({ lopId, thanhVien }: { lopId: string; thanhVien: ThanhV
           <input id="sd-cho" type="number" min={1} max={4} value={sd.cho_moi_ban} onChange={(e) => datKichThuoc('cho_moi_ban', +e.target.value)} /></div>
       </div>
       <p className="qt-mo" style={{ fontSize: 13 }}>
-        {soCho} chỗ · {thanhVien.length} bạn · còn {chuaXep.length} bạn chưa xếp. Bấm vào một chỗ để chọn bạn ngồi đó.
+        {soCho} chỗ · {thanhVien.length} bạn · còn {chuaXep.length} bạn chưa xếp · {Math.max(0, soChoTrong)} chỗ trống. Bấm vào một chỗ để chọn bạn ngồi đó.
       </p>
+      {thieuCho > 0 && (
+        <div className="qt-canh-bao" role="status">
+          Thiếu {thieuCho} chỗ cho các bạn chưa xếp.
+          <button className="qt-nut nho" onClick={themDayChoDu}>Thêm dãy cho đủ chỗ</button>
+          <span>Hoặc cứ để vậy: các bạn không có chỗ vẫn hiện ở dòng “Các bạn khác của lớp” dưới sơ đồ.</span>
+        </div>
+      )}
 
       <div className="qt-so-do">
         <div className="qt-bang-den">Bảng đen</div>
@@ -161,7 +181,7 @@ export function SuaSoDo({ lopId, thanhVien }: { lopId: string; thanhVien: ThanhV
               <div key={b} className="qt-ban" style={{ gridTemplateColumns: `repeat(${sd.cho_moi_ban}, minmax(0, 1fr))` }}>
                 {Array.from({ length: sd.cho_moi_ban }, (_, v) => {
                   const k = khoaCho(d, b, v)
-                  const tv = sd.cho[k] ? tvTheoId.get(sd.cho[k]!) : undefined
+                  const tv = sd.cho[k] ? tvTheoId.get(sd.cho[k]!) : undefined // bạn đã bị xóa thì coi như trống
                   return (
                     <button key={v} type="button" className={`qt-cho ${dangChon === k ? 'dang-chon' : ''} ${tv ? 'co-nguoi' : ''}`}
                       aria-label={tv ? `${tv.ho_ten}, bấm để đổi` : 'Chỗ trống, bấm để xếp'}

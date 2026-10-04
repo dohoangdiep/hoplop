@@ -71,3 +71,5 @@
 .qt-cho.co-nguoi { border-style: solid; color: #22203A; font-weight: 600; }
 .qt-cho.dang-chon { outline: 3px solid #5B3FD6; outline-offset: 1px; }
 .qt-chon-ban { margin-top: 10px; padding: 12px; background: #EFEAFD; border-radius: 10px; }
+.qt-canh-bao { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: #FFF4D6; color: #6B4A00; border-radius: 10px; padding: 10px 12px; font-size: 14px; margin-bottom: 10px; }
+.qt-canh-bao span { font-size: 12px; width: 100%; }

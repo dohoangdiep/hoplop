@@ -105,8 +105,14 @@ export function SapHopLop({ lop }: { lop: Lop }) {
 export function SoDoChoNgoi({ lop }: { lop: Lop }) {
   const { soDay, soBanMoiDay, choMoiBan, choNgoi } = lop.soDo
   const tvTheoId = useMemo(() => new Map(lop.thanhVien.map((t) => [t.id, t])), [lop.thanhVien])
-  const [chon, setChon] = useState<string | null>(choNgoi.find((c) => c.thanhVienId)?.thanhVienId ?? null)
-  if (!soDay) return null
+  const trongLuoi = (c: { day: number; ban: number; viTri: number }) =>
+    c.day < soDay && c.ban < soBanMoiDay && c.viTri < choMoiBan
+  const daNgoi = new Set(choNgoi.filter((c) => c.thanhVienId && trongLuoi(c)).map((c) => c.thanhVienId))
+  const chuaCoCho = lop.thanhVien.filter((t) => !daNgoi.has(t.id))
+  const [chon, setChon] = useState<string | null>(
+    choNgoi.find((c) => c.thanhVienId && tvTheoId.has(c.thanhVienId))?.thanhVienId ?? lop.thanhVien[0]?.id ?? null,
+  )
+  if (!lop.thanhVien.length) return null
   const dangChon = chon ? tvTheoId.get(chon) : undefined
 
   const timCho = (day: number, ban: number, viTri: number) =>
@@ -119,7 +125,7 @@ export function SoDoChoNgoi({ lop }: { lop: Lop }) {
         <h2 className="tieu-de">Sơ đồ lớp {lop.tenLop}</h2>
         <span className="chu-mo">Chạm vào một chỗ ngồi để xem bạn ấy ngày ấy và bây giờ.</span>
       </div>
-      <div className="the so-do">
+      {soDay > 0 && <div className="the so-do">
         <div className="bang-den">Bảng đen · Bàn giáo viên</div>
         {Array.from({ length: soDay }, (_, day) => (
           <div key={day} className="day-ban" style={{ gridTemplateColumns: `repeat(${soBanMoiDay}, minmax(0, 1fr))` }}>
@@ -146,7 +152,19 @@ export function SoDoChoNgoi({ lop }: { lop: Lop }) {
             ))}
           </div>
         ))}
-      </div>
+      </div>}
+      {chuaCoCho.length > 0 && (
+        <div className="ban-khac">
+          <span className="chu-mo">{soDay > 0 ? 'Các bạn khác của lớp' : 'Các bạn trong lớp'}</span>
+          <div className="tab-hang">
+            {chuaCoCho.map((t) => (
+              <button key={t.id} type="button" className="tab" aria-pressed={chon === t.id} onClick={() => setChon(t.id)}>
+                {t.hoTen}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       {dangChon && (
         <div className="the ho-so" aria-live="polite">
           <div className="hai-anh">
