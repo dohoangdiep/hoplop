@@ -210,6 +210,7 @@ export async function luuSoDo(lopId: string, sd: SoDoQT) {
 export interface AnhQT {
   id: string
   loai: 'xua' | 'chuong'
+  chuong_id: string | null
   muc: string | null
   chu_thich: string | null
   nguoi_gui_ten: string | null
@@ -222,7 +223,7 @@ export interface AnhQT {
 export async function dsAnh(lopId: string): Promise<AnhQT[]> {
   const { data, error } = await supabase
     .from('anh')
-    .select('id, loai, muc, chu_thich, nguoi_gui_ten, trang_thai, duong_dan_xem, duong_dan_goc, tao_luc')
+    .select('id, loai, chuong_id, muc, chu_thich, nguoi_gui_ten, trang_thai, duong_dan_xem, duong_dan_goc, tao_luc')
     .eq('lop_id', lopId)
     .eq('da_tai_xong', true)
     .order('tao_luc', { ascending: false })
@@ -272,4 +273,49 @@ export async function taiAnhChoBan(lopMa: string, tv: ThanhVienQT, kieu: 'anh_xu
   if (r.loi) throw new Error(r.loi)
   if (!r.ids[0]) throw new Error('Tải ảnh không thành công, bạn thử lại nhé.')
   await ganAnhChoBan(tv.id, kieu, r.ids[0])
+}
+
+/* ---------------- Các lần họp (chương) ---------------- */
+export interface ChuongQT {
+  id: string
+  ma_qr: string
+  tieu_de: string
+  ngay: string | null
+  dia_diem: string | null
+  mo_ta: string | null
+  video_url: string | null
+  anh_tap_the_id: string | null
+  qr_hieu_luc_tu: string | null
+  qr_hieu_luc_den: string | null
+  thu_tu: number
+}
+export type ChuongSua = Partial<Omit<ChuongQT, 'id' | 'ma_qr'>>
+
+export async function dsChuong(lopId: string): Promise<ChuongQT[]> {
+  const { data, error } = await supabase.from('chuong')
+    .select('id, ma_qr, tieu_de, ngay, dia_diem, mo_ta, video_url, anh_tap_the_id, qr_hieu_luc_tu, qr_hieu_luc_den, thu_tu')
+    .eq('lop_id', lopId).order('ngay', { ascending: false, nullsFirst: true })
+  if (error) throw error
+  return (data ?? []) as ChuongQT[]
+}
+
+export async function taoChuong(lopId: string, c: ChuongSua & { tieu_de: string }) {
+  const { error } = await supabase.from('chuong').insert({ lop_id: lopId, ...c })
+  if (error) throw error
+}
+
+export async function suaChuong(id: string, c: ChuongSua) {
+  const { error } = await supabase.from('chuong').update(c).eq('id', id)
+  if (error) throw error
+}
+
+/** Xóa một lần họp. Ảnh của buổi đó vẫn giữ lại (chuyển sang "không thuộc buổi nào"). */
+export async function xoaChuong(id: string) {
+  const { error } = await supabase.from('chuong').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function datAnhTapThe(chuongId: string, anhId: string) {
+  await capNhatAnh(anhId, { trang_thai: 'da-duyet' })
+  await suaChuong(chuongId, { anh_tap_the_id: anhId })
 }

@@ -26,6 +26,10 @@ export interface Chuong {
   soNguoi?: number
   soAnh?: number
   sapToi?: boolean
+  moTa?: string
+  videoUrl?: string
+  anhTapTheUrl?: string
+  anh?: { id: string; chuThich: string; url?: string }[]
 }
 
 export interface MucAnh {

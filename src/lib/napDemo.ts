@@ -3,7 +3,7 @@ import { guiAnh } from './guiAnh'
 import { veCanh, veChanDung, taoRng, type KieuCanh } from './veAnhDemo'
 import {
   dsThanhVien, themThanhVien, phanTichDanhSach, laySoDo, luuSoDo, khoaCho,
-  ganAnhChoBan, datAnhBia, type LopQuanTri,
+  ganAnhChoBan, datAnhBia, datAnhTapThe, type LopQuanTri,
 } from './quanTri'
 
 const DS_DEMO = `Nguyễn Văn Hùng | Hùng Còi | Đà Nẵng | Ai đi xa nhất thì phải về sớm nhất!
@@ -112,7 +112,15 @@ export async function napDemo(lop: LopQuanTri, bao: (text: string) => void): Pro
   }
 
   // 4. Hai chương: một lần họp đã qua (có ảnh) và một lần sắp tới
-  if ((soChuong ?? 0) > 0) { bao(`Xong! Đã nạp ${soAnh} ảnh demo.`); return { soAnh } }
+  if ((soChuong ?? 0) > 0) {
+    // Lớp đã có các lần họp (nạp từ trước): chọn ảnh tập thể cho buổi nào còn thiếu
+    const { data: dsCh } = await supabase.from('chuong').select('id').eq('lop_id', lop.id).is('anh_tap_the_id', null)
+    for (const ch of dsCh ?? []) {
+      const { data: a } = await supabase.from('anh').select('id').eq('chuong_id', ch.id).eq('trang_thai', 'da-duyet').order('tao_luc').limit(1)
+      if (a?.[0]) await datAnhTapThe(ch.id, a[0].id)
+    }
+    bao(`Xong! Đã nạp ${soAnh} ảnh demo.`); return { soAnh }
+  }
   bao('Đang tạo các lần họp lớp…')
   const homNay = new Date()
   const namTruoc = homNay.getFullYear() - 1
@@ -120,6 +128,7 @@ export async function napDemo(lop: LopQuanTri, bao: (text: string) => void): Pro
   const { data: chQua, error: e1 } = await supabase.from('chuong').insert({
     lop_id: lop.id, tieu_de: `Họp lớp ${soNamTruoc} năm · Tết ${namTruoc}`, ngay: `${namTruoc}-02-${String(10 + (seedLop % 10)).padStart(2, '0')}`,
     dia_diem: 'Nhà hàng [Tên nhà hàng]', thu_tu: 1,
+    mo_ta: 'Lần đầu gặp lại đông đủ sau nhiều năm. (nội dung minh họa)',
   }).select('id, ma_qr').single()
   if (e1) throw e1
   const ngaySap = new Date(homNay.getTime() + 1000 * 86400 * (40 + (seedLop % 40)))
@@ -131,7 +140,8 @@ export async function napDemo(lop: LopQuanTri, bao: (text: string) => void): Pro
   for (let i = 0; i < 4; i++) {
     bao(`Đang tải ảnh buổi họp ${i + 1}/4…`)
     const file = await veCanh('hop-lop', seedLop + 9000 + i * 7, lop.ten_lop, namTruoc, `HỌP LỚP ${lop.ten_lop.toUpperCase()} · ${soNamTruoc} NĂM`)
-    await gui1(file, { maQr: chQua.ma_qr, chuThich: 'Buổi họp lớp (ảnh minh họa)' })
+    const id = await gui1(file, { maQr: chQua.ma_qr, chuThich: 'Buổi họp lớp (ảnh minh họa)' })
+    if (i === 0 && id) await datAnhTapThe(chQua.id, id)
   }
 
   bao(`Xong! Đã nạp ${soAnh} ảnh demo.`)

@@ -4,7 +4,9 @@ import {
   laySoDo, luuSoDo, khoaCho, type ThanhVienQT, type SoDoQT,
   dsAnh, capNhatAnh, capNhatNhieuAnh, ganAnhChoBan, datAnhBia, type AnhQT, type LopQuanTri,
   linkAnhThanhVien, taiAnhChoBan,
+  dsChuong, taoChuong, suaChuong, xoaChuong, datAnhTapThe, type ChuongQT, type ChuongSua,
 } from '../lib/quanTri'
+import QRCode from 'qrcode'
 import { linkXemNhieu, linkTaiGoc } from '../lib/storage'
 import { MUC_ANH, TEN_MUC } from '../lib/guiAnh'
 
@@ -253,6 +255,177 @@ export function SuaSoDo({ lopId, thanhVien }: { lopId: string; thanhVien: ThanhV
   )
 }
 
+/* ---------------- Các lần họp (chương) ---------------- */
+const linkQrChuong = (maLop: string, maQr: string) => `${window.location.origin}/${maLop}/q/${maQr}`
+
+/** Vẽ tờ QR để in đặt trên bàn tiệc: tên buổi họp, mã QR to, lời dặn ngắn. */
+async function veToQr(url: string, tenLop: string, truong: string, tieuDe: string, phu: string): Promise<string> {
+  const W = 1240, H = 1754 // A5 dọc ~150dpi
+  const c = document.createElement('canvas'); c.width = W; c.height = H
+  const g = c.getContext('2d')!
+  try { await document.fonts.load('700 60px "Be Vietnam Pro"') } catch { /* dùng phông mặc định */ }
+  const font = (w: number, px: number) => `${w} ${px}px "Be Vietnam Pro", system-ui, sans-serif`
+  g.fillStyle = '#fff'; g.fillRect(0, 0, W, H)
+  g.textAlign = 'center'; g.fillStyle = '#22203A'
+  const dong = (chu: string, y: number, f: string, rongMax = W - 160) => {
+    g.font = f
+    const tu = chu.split(' '); let hang = ''; const ds: string[] = []
+    for (const t of tu) { const thu = hang ? hang + ' ' + t : t; if (g.measureText(thu).width > rongMax && hang) { ds.push(hang); hang = t } else hang = thu }
+    if (hang) ds.push(hang)
+    const cao = parseInt(f.split(' ')[1]) * 1.25
+    ds.forEach((d, i) => g.fillText(d, W / 2, y + i * cao))
+    return y + ds.length * cao
+  }
+  let y = 150
+  y = dong(`Lớp ${tenLop} · ${truong}`, y, font(500, 40))
+  y = dong(tieuDe, y + 40, font(700, 72))
+  if (phu) y = dong(phu, y + 10, font(400, 38))
+  const qr = document.createElement('canvas')
+  await QRCode.toCanvas(qr, url, { width: 820, margin: 1 })
+  const yQr = Math.max(y + 40, 520)
+  g.drawImage(qr, (W - 820) / 2, yQr)
+  y = yQr + 820 + 90
+  y = dong('Quét mã để gửi ảnh vào album chung của lớp', y, font(700, 46))
+  dong('Không cần cài app, không cần đăng nhập', y + 6, font(400, 36))
+  g.fillStyle = '#6B6680'
+  dong(url.replace(/^https?:\/\//, ''), H - 70, font(400, 28))
+  return c.toDataURL('image/png')
+}
+
+function QrChuong({ c, maLop, tenLop, truong }: { c: ChuongQT; maLop: string; tenLop: string; truong: string }) {
+  const [src, setSrc] = useState('')
+  const [daChep, setDaChep] = useState(false)
+  const url = linkQrChuong(maLop, c.ma_qr)
+  const phu = [c.ngay && new Date(c.ngay).toLocaleDateString('vi-VN'), c.dia_diem].filter(Boolean).join(' · ')
+  useEffect(() => { veToQr(url, tenLop, truong, c.tieu_de, phu).then(setSrc) }, [url, tenLop, truong, c.tieu_de, phu])
+  return (
+    <div className="qt-qr-chuong">
+      {src ? <img src={src} alt={`Tờ mã QR gửi ảnh cho ${c.tieu_de}`} /> : <p>Đang tạo mã QR…</p>}
+      <div className="qt-hang">
+        {src && <a className="qt-nut chinh nho" href={src} download={`qr-${maLop}-${c.ma_qr.slice(0, 6)}.png`}>Tải tờ QR để in</a>}
+        <button type="button" className="qt-nut nho" onClick={() => { navigator.clipboard.writeText(url); setDaChep(true); setTimeout(() => setDaChep(false), 1500) }}>
+          {daChep ? 'Đã chép' : 'Chép link gửi ảnh'}
+        </button>
+        <a className="qt-nut nho" href={url} target="_blank" rel="noreferrer">Mở thử</a>
+      </div>
+      <p className="qt-mo" style={{ fontSize: 13, margin: 0 }}>In ra đặt ở bàn tiệc hoặc gửi link vào nhóm Zalo. Ảnh khách gửi nằm ở “Chờ duyệt”; ảnh bạn gửi khi đang đăng nhập quản trị được duyệt sẵn.</p>
+    </div>
+  )
+}
+
+const ngayO = (iso: string | null) => (iso ? iso.slice(0, 10) : '')
+const ngayTuO = (d: string, cuoiNgay: boolean) => (d ? new Date(`${d}T${cuoiNgay ? '23:59:59' : '00:00:00'}`).toISOString() : null)
+
+function FormChuong({ dau, onLuu, onHuy }: { dau?: ChuongQT; onLuu: (c: ChuongSua & { tieu_de: string }) => Promise<void>; onHuy: () => void }) {
+  const [f, setF] = useState({
+    tieu_de: dau?.tieu_de ?? '', ngay: dau?.ngay ?? '', dia_diem: dau?.dia_diem ?? '', mo_ta: dau?.mo_ta ?? '',
+    video_url: dau?.video_url ?? '', tu: ngayO(dau?.qr_hieu_luc_tu ?? null), den: ngayO(dau?.qr_hieu_luc_den ?? null),
+  })
+  const [dang, setDang] = useState(false)
+  const [loi, setLoi] = useState('')
+  const doi = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF({ ...f, [k]: e.target.value })
+  const id = (k: string) => `ch-${k}-${dau?.id ?? 'moi'}`
+  const luu = async (e: React.FormEvent) => {
+    e.preventDefault(); setLoi('')
+    if (f.video_url && !/^https?:\/\//.test(f.video_url)) { setLoi('Link video phải bắt đầu bằng https://'); return }
+    setDang(true)
+    try {
+      await onLuu({
+        tieu_de: f.tieu_de.trim(), ngay: f.ngay || null, dia_diem: f.dia_diem.trim() || null, mo_ta: f.mo_ta.trim() || null,
+        video_url: f.video_url.trim() || null, qr_hieu_luc_tu: ngayTuO(f.tu, false), qr_hieu_luc_den: ngayTuO(f.den, true),
+      })
+    } catch (er) { setLoi((er as Error).message) } finally { setDang(false) }
+  }
+  return (
+    <form className="qt-form qt-the" onSubmit={luu}>
+      <label htmlFor={id('td')}>Tên buổi họp</label>
+      <input id={id('td')} required value={f.tieu_de} onChange={doi('tieu_de')} placeholder="Họp lớp 20 năm · Tết 2027" />
+      <div className="qt-hai-cot">
+        <div><label htmlFor={id('ng')}>Ngày</label><input id={id('ng')} type="date" value={f.ngay} onChange={doi('ngay')} /></div>
+        <div><label htmlFor={id('dd')}>Địa điểm</label><input id={id('dd')} value={f.dia_diem} onChange={doi('dia_diem')} placeholder="Nhà hàng …" /></div>
+      </div>
+      <label htmlFor={id('mt')}>Vài dòng về buổi họp (không bắt buộc)</label>
+      <textarea id={id('mt')} rows={3} className="qt-o-van" value={f.mo_ta} onChange={doi('mo_ta')} />
+      <label htmlFor={id('vd')}>Link video (YouTube, Google Drive… không bắt buộc)</label>
+      <input id={id('vd')} inputMode="url" value={f.video_url} onChange={doi('video_url')} placeholder="https://" />
+      <fieldset className="qt-fieldset">
+        <legend>Nhận ảnh qua QR (để trống = luôn nhận)</legend>
+        <div className="qt-hai-cot">
+          <div><label htmlFor={id('tu')}>Từ ngày</label><input id={id('tu')} type="date" value={f.tu} onChange={doi('tu')} /></div>
+          <div><label htmlFor={id('den')}>Đến hết ngày</label><input id={id('den')} type="date" value={f.den} onChange={doi('den')} /></div>
+        </div>
+      </fieldset>
+      <div className="qt-hang">
+        <button className="qt-nut chinh" disabled={dang}>{dang ? 'Đang lưu…' : 'Lưu'}</button>
+        <button type="button" className="qt-nut" onClick={onHuy}>Hủy</button>
+      </div>
+      {loi && <p className="qt-loi" role="alert">{loi}</p>}
+    </form>
+  )
+}
+
+export function QuanLyChuong({ lopId, maLop, tenLop, truong, onDoi }: {
+  lopId: string; maLop: string; tenLop: string; truong: string; onDoi: (ds: ChuongQT[]) => void
+}) {
+  const [ds, setDs] = useState<ChuongQT[] | null>(null)
+  const [dangSua, setDangSua] = useState<string | null>(null) // id chương, hoặc 'moi'
+  const [moQr, setMoQr] = useState<string | null>(null)
+  const [loi, setLoi] = useState('')
+  const tai = async () => {
+    try { const d = await dsChuong(lopId); setDs(d); onDoi(d) } catch (e) { setLoi((e as Error).message) }
+  }
+  useEffect(() => { tai() }, [lopId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const xoa = async (c: ChuongQT) => {
+    if (!window.confirm(`Xóa “${c.tieu_de}”? Ảnh của buổi này vẫn được giữ, nhưng không còn thuộc buổi nào. Mã QR đã in sẽ không dùng được nữa.`)) return
+    try { await xoaChuong(c.id); await tai() } catch (e) { setLoi((e as Error).message) }
+  }
+
+  return (
+    <section className="qt-muc">
+      <div className="qt-tieu-de">
+        <h2>Các lần họp lớp ({ds?.length ?? 0})</h2>
+        {dangSua !== 'moi' && <button className="qt-nut nho chinh" onClick={() => setDangSua('moi')}>Thêm lần họp</button>}
+      </div>
+      <p className="qt-mo" style={{ fontSize: 13, marginTop: 0 }}>Mỗi lần họp là một chương trên trang lớp, có album riêng và mã QR riêng để mọi người gửi ảnh ngay tại buổi họp.</p>
+
+      {dangSua === 'moi' && (
+        <FormChuong onHuy={() => setDangSua(null)} onLuu={async (c) => { await taoChuong(lopId, c); setDangSua(null); await tai() }} />
+      )}
+
+      {ds === null ? <p>Đang tải…</p> : ds.length === 0 && dangSua !== 'moi' ? <p className="qt-mo">Chưa có lần họp nào.</p> : (
+        <ul className="qt-ds-chuong">
+          {ds.map((c) => (
+            <li key={c.id}>
+              {dangSua === c.id ? (
+                <FormChuong dau={c} onHuy={() => setDangSua(null)} onLuu={async (m) => { await suaChuong(c.id, m); setDangSua(null); await tai() }} />
+              ) : (
+                <>
+                  <div>
+                    <strong>{c.tieu_de}</strong>
+                    <span className="qt-mo">
+                      {[c.ngay ? new Date(c.ngay).toLocaleDateString('vi-VN') : 'Chưa có ngày', c.dia_diem,
+                        c.ngay && new Date(c.ngay).getTime() > Date.now() - 86400000 ? 'sắp tới' : null,
+                        c.anh_tap_the_id ? 'có ảnh tập thể' : 'chưa có ảnh tập thể'].filter(Boolean).join(' · ')}
+                    </span>
+                  </div>
+                  <div className="qt-hang">
+                    <button className={`qt-nut nho ${moQr === c.id ? 'chinh' : ''}`} onClick={() => setMoQr(moQr === c.id ? null : c.id)}>Mã QR gửi ảnh</button>
+                    <button className="qt-nut nho" onClick={() => setDangSua(c.id)}>Sửa</button>
+                    <button className="qt-nut nho nguy" onClick={() => xoa(c)}>Xóa</button>
+                  </div>
+                  {moQr === c.id && <QrChuong c={c} maLop={maLop} tenLop={tenLop} truong={truong} />}
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {loi && <p className="qt-loi" role="alert">{loi}</p>}
+    </section>
+  )
+}
+
 /* ---------------- Ảnh ---------------- */
 const TAB_ANH: { ma: AnhQT['trang_thai']; ten: string }[] = [
   { ma: 'cho-duyet', ten: 'Chờ duyệt' },
@@ -260,7 +433,8 @@ const TAB_ANH: { ma: AnhQT['trang_thai']; ten: string }[] = [
   { ma: 'an', ten: 'Đã ẩn' },
 ]
 
-export function QuanLyAnh({ lopId, maLop, thanhVien }: { lopId: string; maLop: string; thanhVien: ThanhVienQT[] }) {
+export function QuanLyAnh({ lopId, maLop, thanhVien, chuong = [] }: { lopId: string; maLop: string; thanhVien: ThanhVienQT[]; chuong?: ChuongQT[] }) {
+  const [thuoc, setThuoc] = useState('tat-ca')
   const [ds, setDs] = useState<AnhQT[] | null>(null)
   const [url, setUrl] = useState<Record<string, string>>({})
   const [tab, setTab] = useState<AnhQT['trang_thai']>('cho-duyet')
@@ -282,8 +456,10 @@ export function QuanLyAnh({ lopId, maLop, thanhVien }: { lopId: string; maLop: s
   }
 
   if (!ds) return <section className="qt-muc"><h2>Ảnh</h2><p>Đang tải…</p></section>
-  const loc = ds.filter((a) => a.trang_thai === tab)
-  const dem = (t: AnhQT['trang_thai']) => ds.filter((a) => a.trang_thai === t).length
+  const theoNhom = ds.filter((a) => thuoc === 'tat-ca' || (thuoc === 'xua' ? a.loai === 'xua' : a.chuong_id === thuoc))
+  const loc = theoNhom.filter((a) => a.trang_thai === tab)
+  const dem = (t: AnhQT['trang_thai']) => theoNhom.filter((a) => a.trang_thai === t).length
+  const tenChuong = new Map(chuong.map((c) => [c.id, c.tieu_de]))
   const anhMo = dangMo ? ds.find((a) => a.id === dangMo) : undefined
 
   return (
@@ -294,6 +470,16 @@ export function QuanLyAnh({ lopId, maLop, thanhVien }: { lopId: string; maLop: s
       </div>
       <p className="qt-mo" style={{ fontSize: 13, marginTop: 0 }}>Ảnh do quản trị tải lên được duyệt sẵn. Ảnh thành viên gửi nằm ở “Chờ duyệt”.</p>
 
+      {chuong.length > 0 && (
+        <>
+          <label htmlFor="loc-thuoc" className="qt-nhan">Xem ảnh của</label>
+          <select id="loc-thuoc" value={thuoc} onChange={(e) => { setThuoc(e.target.value); setDangMo(null) }}>
+            <option value="tat-ca">Tất cả</option>
+            <option value="xua">Kho ảnh xưa</option>
+            {chuong.map((c) => <option key={c.id} value={c.id}>{c.tieu_de}</option>)}
+          </select>
+        </>
+      )}
       <div className="qt-hang" role="group" aria-label="Lọc ảnh">
         {TAB_ANH.map((t) => (
           <button key={t.ma} className={`qt-nut nho ${tab === t.ma ? 'chinh' : ''}`} onClick={() => { setTab(t.ma); setDangMo(null) }}>
@@ -335,6 +521,15 @@ export function QuanLyAnh({ lopId, maLop, thanhVien }: { lopId: string; maLop: s
             {anhMo.trang_thai !== 'an' && <button className="qt-nut nho nguy" onClick={() => lam(() => capNhatAnh(anhMo.id, { trang_thai: 'an' }))}>Ẩn</button>}
             <button className="qt-nut nho" onClick={async () => { const u = await linkTaiGoc(anhMo.duong_dan_goc, `anh-${anhMo.id.slice(0, 8)}`); if (u) window.open(u) }}>Tải ảnh gốc</button>
           </div>
+
+          {anhMo.loai === 'chuong' && (
+            <>
+              <p className="qt-mo" style={{ margin: 0, fontSize: 13 }}>Thuộc buổi: <b>{(anhMo.chuong_id && tenChuong.get(anhMo.chuong_id)) || 'không rõ'}</b></p>
+              {anhMo.chuong_id && tenChuong.has(anhMo.chuong_id) && (
+                <button className="qt-nut nho" onClick={() => lam(() => datAnhTapThe(anhMo.chuong_id!, anhMo.id))}>Đặt làm ảnh tập thể của buổi này</button>
+              )}
+            </>
+          )}
 
           {anhMo.loai === 'xua' && (
             <>

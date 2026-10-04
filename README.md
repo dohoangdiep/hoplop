@@ -14,4 +14,4 @@ Mở http://localhost:5173 và http://localhost:5173/xemmau (lớp mẫu, thêm 
 - Biến môi trường đã có sẵn trong `.env.production` (chỉ giá trị công khai).
 
 ## Database (Supabase)
-Mở Supabase → SQL Editor, dán nội dung `supabase/migrations/0001_cau_truc_ban_dau.sql`, bấm Run.
+Mở Supabase → SQL Editor, lần lượt dán nội dung từng file trong `supabase/migrations/` (0001, 0002, 0003…) theo đúng thứ tự, mỗi file bấm Run một lần.

@@ -51,6 +51,7 @@ function chuyenLop(d: any): Lop {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     chuong: (d.chuong ?? []).map((c: any) => ({
       id: c.id, tieuDe: c.tieu_de, ngay: c.ngay ?? '', diaDiem: c.dia_diem ?? undefined,
+      moTa: c.mo_ta ?? undefined, videoUrl: c.video_url ?? undefined, anhTapThe: c.anh_tap_the ?? undefined,
       sapToi: !!c.ngay && new Date(c.ngay).getTime() > Date.now() - 86400000,
     })),
     khoAnhXua: [],
@@ -87,6 +88,8 @@ async function ganAnh(lop: Lop, d: any): Promise<Lop> {
   const url = await linkXemNhieu([
     ...anh.map((a) => a.xem),
     ...tv.flatMap((t) => [t.anh_xua, t.anh_nay]),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...(d.chuong ?? []).map((c: any) => c.anh_tap_the),
     d.lop?.anh_bia,
   ])
   const xua = anh.filter((a) => a.loai === 'xua')
@@ -106,6 +109,15 @@ async function ganAnh(lop: Lop, d: any): Promise<Lop> {
         anh: xua.filter((a) => (a.muc ?? 'khac') === m.ma).map((a) => ({ id: a.id, chuThich: a.chu_thich ?? '', url: url[a.xem] })),
       }))
       .filter((m) => m.anh.length > 0),
-    chuong: lop.chuong.map((c) => ({ ...c, soAnh: anh.filter((a) => a.chuong_id === c.id).length || undefined })),
+    chuong: lop.chuong.map((c) => {
+      const album = anh.filter((a) => a.chuong_id === c.id)
+      const { anhTapThe, ...con } = c as typeof c & { anhTapThe?: string }
+      return {
+        ...con,
+        anhTapTheUrl: anhTapThe ? url[anhTapThe] : undefined,
+        soAnh: album.length || undefined,
+        anh: album.map((a) => ({ id: a.id, chuThich: a.chu_thich ?? '', url: url[a.xem] })),
+      }
+    }),
   }
 }

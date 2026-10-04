@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { moLop, type KetQuaMoLop } from '../lib/lop'
 import { bienCss, layGiaoDien, napFont, DANH_SACH_GIAO_DIEN, GIAO_DIEN, type MaGiaoDien } from '../themes'
-import { Bia, SapHopLop, SoDoChoNgoi, KhoAnhXua, DongThoiGian } from '../components/KhoiTrangLop'
+import { Bia, SapHopLop, SoDoChoNgoi, KhoAnhXua, DongThoiGian, NamNayNamNgoai } from '../components/KhoiTrangLop'
 import { MA_LOP_MAU } from '../data/lopMau'
 import '../styles/lop.css'
 
@@ -114,6 +114,7 @@ export default function TrangLop() {
           <SoDoChoNgoi lop={lop} />
           <KhoAnhXua lop={lop} />
           <DongThoiGian lop={lop} />
+          <NamNayNamNgoai lop={lop} />
         </>
       )}
       <footer className="chan-trang khung">

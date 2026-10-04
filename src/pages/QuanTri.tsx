@@ -8,8 +8,8 @@ import {
   type LopQuanTri,
 } from '../lib/quanTri'
 import { DANH_SACH_GIAO_DIEN, GIAO_DIEN, type MaGiaoDien } from '../themes'
-import { QuanLyThanhVien, SuaSoDo, QuanLyAnh, NutNapDemo, BAT_DEMO } from './QuanTriLop'
-import type { ThanhVienQT } from '../lib/quanTri'
+import { QuanLyThanhVien, SuaSoDo, QuanLyAnh, QuanLyChuong, NutNapDemo, BAT_DEMO } from './QuanTriLop'
+import type { ThanhVienQT, ChuongQT } from '../lib/quanTri'
 import '../styles/quantri.css'
 
 const TRANG_THAI: Record<string, string> = {
@@ -226,6 +226,7 @@ function ChiTietLop() {
   const [matKhauMoi, setMatKhauMoi] = useState('')
   const [thongBao, setThongBao] = useState('')
   const [thanhVien, setThanhVien] = useState<ThanhVienQT[]>([])
+  const [chuong, setChuong] = useState<ChuongQT[]>([])
   useEffect(() => { layLop(id).then(setLop).catch(() => setLop(null)) }, [id])
 
   if (lop === undefined) return <main className="qt-khung">Đang tải…</main>
@@ -276,7 +277,8 @@ function ChiTietLop() {
 
       <QuanLyThanhVien lopId={lop.id} lopMa={lop.ma} onDoi={setThanhVien} />
       <SuaSoDo lopId={lop.id} thanhVien={thanhVien} />
-      <QuanLyAnh lopId={lop.id} maLop={lop.ma} thanhVien={thanhVien} />
+      <QuanLyChuong lopId={lop.id} maLop={lop.ma} tenLop={lop.ten_lop} truong={lop.truong} onDoi={setChuong} />
+      <QuanLyAnh lopId={lop.id} maLop={lop.ma} thanhVien={thanhVien} chuong={chuong} />
 
       {BAT_DEMO && (
         <section className="qt-muc">
@@ -285,10 +287,6 @@ function ChiTietLop() {
         </section>
       )}
 
-      <section className="qt-muc qt-mo">
-        <h2>Sắp có</h2>
-        <p>Tạo chương họp lớp và mã QR gửi ảnh tại buổi họp.</p>
-      </section>
       {thongBao && <p className="qt-ok" role="status">{thongBao}</p>}
     </main>
   )
