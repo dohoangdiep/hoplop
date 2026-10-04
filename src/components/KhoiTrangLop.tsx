@@ -10,6 +10,14 @@ const IconAnh = () => (
   </svg>
 )
 
+const homNay = () => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+/** Buổi họp đã diễn ra (hoặc đang diễn ra hôm nay), hay đã có ảnh thì coi như đã có chương. */
+const daCoChuong = (c: Lop['chuong'][number]) =>
+  !c.sapToi || !c.ngay || c.ngay <= homNay() || !!c.soAnh || !!c.anhTapTheUrl
+
 function AnhBia({ lop }: { lop: Lop }) {
   return lop.anhBiaUrl ? (
     <div className="khung-anh xua"><img src={lop.anhBiaUrl} alt={`Ảnh tập thể lớp ${lop.tenLop}`} /></div>
@@ -23,7 +31,7 @@ function AnhBia({ lop }: { lop: Lop }) {
 
 export function Bia({ lop, kieu }: { lop: Lop; kieu: KieuBia }) {
   const soNam = lop.nienKhoaKetThuc ? new Date().getFullYear() - lop.nienKhoaKetThuc : 0
-  const soLanHop = lop.chuong.filter((c) => !c.sapToi).length
+  const soLanHop = lop.chuong.filter(daCoChuong).length
   const nienKhoa = `${lop.nienKhoaBatDau} – ${lop.nienKhoaKetThuc}`
 
   const soLieu = (
@@ -83,14 +91,15 @@ export function Bia({ lop, kieu }: { lop: Lop; kieu: KieuBia }) {
 }
 
 export function SapHopLop({ lop }: { lop: Lop }) {
-  const sap = lop.chuong.find((c) => c.sapToi)
+  // Buổi gần nhất từ hôm nay trở đi
+  const sap = lop.chuong.filter((c) => c.ngay && c.ngay >= homNay()).sort((a, b) => a.ngay.localeCompare(b.ngay))[0]
   if (!sap) return null
-  const conNgay = Math.ceil((new Date(sap.ngay).getTime() - Date.now()) / 86400000)
+  const conNgay = Math.round((new Date(sap.ngay + 'T00:00:00').getTime() - new Date(homNay() + 'T00:00:00').getTime()) / 86400000)
   return (
     <section className="sap-hop" aria-label="Buổi họp lớp sắp tới">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <span className="nhan">Sắp họp lớp</span>
-        {conNgay > 0 && <span style={{ fontSize: 13, fontWeight: 600 }}>Còn {conNgay} ngày</span>}
+        <span style={{ fontSize: 13, fontWeight: 600 }}>{conNgay > 0 ? `Còn ${conNgay} ngày` : 'Hôm nay!'}</span>
       </div>
       <div className="ten">{sap.tieuDe}</div>
       {sap.diaDiem && <div style={{ fontSize: 13, color: 'var(--mau-on-primary-muted)' }}>{sap.diaDiem}</div>}
@@ -298,7 +307,7 @@ function MotLanHop({ c }: { c: Lop['chuong'][number] }) {
 }
 
 export function DongThoiGian({ lop }: { lop: Lop }) {
-  const ds = lop.chuong.filter((c) => !c.sapToi)
+  const ds = lop.chuong.filter(daCoChuong)
   if (!ds.length) return null
   return (
     <section className="muc khung">
@@ -316,7 +325,7 @@ export function DongThoiGian({ lop }: { lop: Lop }) {
 /** Ảnh tập thể các năm đặt cạnh nhau. Lấy cả ảnh bìa (ngày ra trường) làm mốc đầu tiên. */
 export function NamNayNamNgoai({ lop }: { lop: Lop }) {
   const moc = [
-    ...lop.chuong.filter((c) => !c.sapToi && c.anhTapTheUrl)
+    ...lop.chuong.filter((c) => c.anhTapTheUrl)
       .map((c) => ({ khoa: c.id, nam: c.ngay.slice(0, 4), nhan: c.tieuDe, url: c.anhTapTheUrl! })),
     ...(lop.anhBiaUrl ? [{ khoa: 'bia', nam: String(lop.nienKhoaKetThuc || ''), nhan: 'Ngày ra trường', url: lop.anhBiaUrl }] : []),
   ]
