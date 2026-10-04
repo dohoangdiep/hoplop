@@ -4,7 +4,6 @@ import {
   laySoDo, luuSoDo, khoaCho, type ThanhVienQT, type SoDoQT,
   dsAnh, capNhatAnh, capNhatNhieuAnh, ganAnhChoBan, datAnhBia, type AnhQT, type LopQuanTri,
 } from '../lib/quanTri'
-import { napDemo } from '../lib/napDemo'
 import { linkXemNhieu, linkTaiGoc } from '../lib/storage'
 import { MUC_ANH, TEN_MUC } from '../lib/guiAnh'
 
@@ -339,6 +338,9 @@ export function QuanLyAnh({ lopId, maLop, thanhVien }: { lopId: string; maLop: s
 }
 
 /* ---------------- Dữ liệu demo ---------------- */
+/** Bật/tắt bằng biến VITE_BAT_DEMO trong .env.production (1 = bật, 0 = tắt). */
+export const BAT_DEMO = import.meta.env.VITE_BAT_DEMO === '1'
+
 export function NutNapDemo({ lops, nhan }: { lops: LopQuanTri[]; nhan: string }) {
   const [dang, setDang] = useState(false)
   const [tienDo, setTienDo] = useState('')
@@ -347,6 +349,7 @@ export function NutNapDemo({ lops, nhan }: { lops: LopQuanTri[]; nhan: string })
     if (!window.confirm(`Nạp khoảng 70 ảnh hoạt hình minh họa (duyệt sẵn) vào ${lops.length} lớp? Lớp chưa có thành viên sẽ được thêm 24 bạn mẫu. Giữ trang mở đến khi xong.`)) return
     setDang(true); setLoi('')
     try {
+      const { napDemo } = await import('../lib/napDemo') // chỉ tải code vẽ ảnh khi bấm
       for (let i = 0; i < lops.length; i++) {
         const l = lops[i]
         await napDemo(l, (t) => setTienDo(lops.length > 1 ? `Lớp ${l.ten_lop} (${i + 1}/${lops.length}): ${t}` : t))
