@@ -137,3 +137,7 @@ Bật RLS cho mọi bảng. Viết migration SQL trong `supabase/migrations/`.
 - Không dùng emoji làm biểu tượng; dùng icon SVG nét.
 - Không bịa số liệu hay lời nhận xét khách hàng; chỗ chưa có dùng `[...]`.
 - Dữ liệu cá nhân và ảnh là của lớp: không index, không công khai, không chia sẻ chéo giữa các lớp.
+
+## 11. Tiến độ
+
+Xem `docs/TIEN_DO.md`: đã làm gì, file SQL nào đã chạy, việc tiếp theo.
