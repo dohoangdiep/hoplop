@@ -1,12 +1,14 @@
-import React from 'react'
+import React, { lazy, Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import TrangChu from './pages/TrangChu'
-import TrangLop from './pages/TrangLop'
 import { SapCo } from './pages/SapCo'
-import QuanTri from './pages/QuanTri'
-import GuiAnh from './pages/GuiAnh'
-import GuiAnhQr from './pages/GuiAnhQr'
+
+// Trang chủ nạp ngay; các trang khác tách thành gói riêng để trang chủ mở nhanh trên 4G
+const TrangLop = lazy(() => import('./pages/TrangLop'))
+const QuanTri = lazy(() => import('./pages/QuanTri'))
+const GuiAnh = lazy(() => import('./pages/GuiAnh'))
+const GuiAnhQr = lazy(() => import('./pages/GuiAnhQr'))
 
 const fontChung = document.createElement('link')
 fontChung.rel = 'stylesheet'
@@ -17,6 +19,7 @@ document.body.style.margin = '0'
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
+      <Suspense fallback={null}>
       <Routes>
         <Route path="/" element={<TrangChu />} />
         <Route path="/quan-tri/*" element={<QuanTri />} />
@@ -25,6 +28,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/:ma/q/:chuongMa" element={<GuiAnhQr />} />
         <Route path="*" element={<SapCo tieuDe="Không tìm thấy trang" moTa="Đường dẫn này không tồn tại." />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   </React.StrictMode>,
 )

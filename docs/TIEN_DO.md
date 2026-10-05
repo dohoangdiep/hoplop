@@ -1,4 +1,4 @@
-# hoplop: tiến độ và bàn giao (cập nhật 05/10/2026)
+# hoplop: tiến độ và bàn giao (cập nhật 05/10/2026, tối)
 
 Đây là file bàn giao để chuyển sang một cuộc trò chuyện mới. Đặc tả đầy đủ của sản phẩm nằm trong `CLAUDE.md` ở gốc kho; file này chỉ ghi **đã làm gì, đang ở đâu, việc tiếp theo**.
 
@@ -52,12 +52,16 @@ Quản trị hệ thống: user của chủ dự án đã được thêm vào b�
    - Các lần họp (chương): thêm/sửa/xóa (tên, ngày, địa điểm, mô tả, link video, khoảng ngày nhận ảnh QR); **tờ QR A5 để in** + chép link + mở thử.
    - Ảnh: lọc theo kho ảnh xưa / từng buổi; Chờ duyệt / Đã duyệt / Đã ẩn; duyệt, ẩn, tải ảnh gốc, đổi mục, gắn làm ảnh ngày ấy/bây giờ của một bạn, đặt làm ảnh bìa, đặt làm ảnh tập thể của buổi.
    - Ảnh do quản trị tải lên (kể cả qua trang QR khi đang đăng nhập) được duyệt sẵn.
-7. **Dữ liệu demo để thử:** nút "Nạp ảnh demo" vẽ ảnh hoạt hình trên trình duyệt (24 bạn mẫu, sơ đồ, ~14 ảnh xưa, chân dung, 2 buổi họp), chạy tiếp được từ chỗ dừng. Bật/tắt bằng `VITE_BAT_DEMO` trong `.env.production` (1 = bật, 0 = tắt). **Tắt trước khi bán cho khách.**
+7. **Trang chủ bán hàng** `/` theo mockup `TrangChu.dc.html`: mở đầu có thẻ sơ đồ lớp bấm đổi bạn (ảnh ngày ấy – bây giờ), ô Vào lớp (nhận cả mã lẫn link dán vào, báo lỗi khi sai), 6 tính năng có hình minh họa (QR thật mở lớp mẫu; Hộp thư thời gian gắn nhãn "Sắp có"), so sánh Zalo, 3 mẫu giao diện, 4 bước, bảng giá, hỏi đáp dạng mở/đóng, khối đặt trang, chân trang.
+   - **Mọi chữ, giá, số Zalo, tên hộ kinh doanh, địa chỉ, Facebook, cảm nhận khách** nằm trong `src/data/trangChu.ts`. Chưa điền thì trang hiện `[số điện thoại]`, `[Tên hộ kinh doanh]`, `[Địa chỉ]`; khối "Các lớp nói gì" tự ẩn khi `CAM_NHAN` rỗng.
+   - Ảnh minh họa (tranh vẽ, không phải người thật) trong `public/trang-chu/`, vẽ lại bằng `scripts/anh-trang-chu/` (chạy `npx vite --port 5179` rồi `python3 scripts/anh-trang-chu/chay.py`).
+   - Các trang khác tách gói (`React.lazy`), trang chủ nạp ~64KB gzip thay vì ~175KB. Thêm thẻ OG cho trang chủ trong `index.html`.
+8. **Dữ liệu demo để thử:** nút "Nạp ảnh demo" vẽ ảnh hoạt hình trên trình duyệt (24 bạn mẫu, sơ đồ, ~14 ảnh xưa, chân dung, 2 buổi họp), chạy tiếp được từ chỗ dừng. Bật/tắt bằng `VITE_BAT_DEMO` trong `.env.production` (1 = bật, 0 = tắt). **Tắt trước khi bán cho khách.**
 
 ## 5. Việc tiếp theo
 
 **Còn của Đợt 1:**
-- Trang chủ bán hàng `/` hoàn chỉnh theo mockup `TrangChu.dc.html` / `TrangChuDienThoai.dc.html` (hiện là bản đơn giản, đã có ô "Vào lớp của bạn" và link lớp mẫu).
+- Điền số Zalo, tên hộ kinh doanh, địa chỉ trong `src/data/trangChu.ts`; thêm cảm nhận thật khi có lớp đầu tiên. Trang Chính sách bảo mật / Điều khoản (chưa có, nên chưa đặt link).
 - Tắt `VITE_BAT_DEMO` khi thử xong; có thể thêm nút "Xóa dữ liệu demo".
 - Cấu hình SMTP riêng cho email đăng nhập (giới hạn gửi email mặc định của Supabase rất thấp).
 
