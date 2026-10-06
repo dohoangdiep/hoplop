@@ -5,6 +5,7 @@ import {
   dsAnh, capNhatAnh, capNhatNhieuAnh, xepAnhQT, ganAnhChoBan, datAnhBia, type AnhQT, type LopQuanTri,
   linkAnhThanhVien, taiAnhChoBan,
   dsChuong, taoChuong, suaChuong, xoaChuong, datAnhTapThe, type ChuongQT, type ChuongSua,
+  dsThuQT, anThu, xoaThu, type ThuQT,
 } from '../lib/quanTri'
 import { linkQrChuong, veToQr } from '../lib/toQr'
 import { linkXemNhieu, linkTaiGoc } from '../lib/storage'
@@ -553,5 +554,72 @@ export function NutNapDemo({ lops, nhan }: { lops: LopQuanTri[]; nhan: string })
       {tienDo && <p className="qt-mo" role="status" style={{ margin: 0, fontSize: 13 }}>{tienDo}</p>}
       {loi && <p className="qt-loi" role="alert">{loi}</p>}
     </div>
+  )
+}
+
+/** Xóa dữ liệu do nút "Nạp ảnh demo" tạo ra (ảnh minh họa, 24 bạn mẫu, buổi họp minh họa). */
+export function NutXoaDemo({ lop }: { lop: LopQuanTri }) {
+  const [dang, setDang] = useState(false)
+  const [tienDo, setTienDo] = useState('')
+  const [loi, setLoi] = useState('')
+  const chay = async () => {
+    if (!window.confirm(`Xóa dữ liệu demo của lớp ${lop.ten_lop}? Chỉ xóa ảnh minh họa, 24 bạn mẫu và các buổi họp minh họa; ảnh và thành viên thật được giữ nguyên.`)) return
+    setDang(true); setLoi('')
+    try {
+      const { xoaDemo } = await import('../lib/napDemo')
+      await xoaDemo(lop, setTienDo)
+    } catch (e) { setLoi((e as Error).message) } finally { setDang(false) }
+  }
+  return (
+    <div className="qt-form" style={{ marginTop: 8 }}>
+      <button className="qt-nut nguy" onClick={chay} disabled={dang}>{dang ? 'Đang xóa…' : 'Xóa dữ liệu demo của lớp này'}</button>
+      {tienDo && <p className="qt-mo" role="status" style={{ margin: 0, fontSize: 13 }}>{tienDo} {!dang && 'Tải lại trang để thấy thay đổi.'}</p>}
+      {loi && <p className="qt-loi" role="alert">{loi}</p>}
+    </div>
+  )
+}
+
+/* ---------------- Hộp thư thời gian ---------------- */
+export function QuanLyThu({ lopId, chuong }: { lopId: string; chuong: ChuongQT[] }) {
+  const [ds, setDs] = useState<ThuQT[] | null>(null)
+  const [moId, setMoId] = useState<string | null>(null)
+  const [loi, setLoi] = useState('')
+  const tai = async () => { try { setDs(await dsThuQT(lopId)) } catch (e) { setLoi((e as Error).message) } }
+  useEffect(() => { tai() }, [lopId]) // eslint-disable-line react-hooks/exhaustive-deps
+  const lam = async (viec: () => Promise<void>) => { setLoi(''); try { await viec(); await tai() } catch (e) { setLoi((e as Error).message) } }
+  const ngayBuoi = new Map(chuong.map((c) => [c.id, c]))
+  const ngayMo = (t: ThuQT) => (t.mo_vao_chuong_id && ngayBuoi.get(t.mo_vao_chuong_id)?.ngay) || t.mo_vao_ngay
+  const homNay = new Date().toISOString().slice(0, 10)
+
+  return (
+    <section className="qt-muc">
+      <h2>Hộp thư thời gian ({ds?.length ?? 0})</h2>
+      <p className="qt-mo" style={{ fontSize: 13, marginTop: 0 }}>Thư niêm phong đến ngày mở: trên trang lớp không ai đọc được, kể cả lớp trưởng. Bạn chỉ nên mở xem khi cần kiểm tra thư rác hoặc nội dung không phù hợp.</p>
+      {ds === null ? <p>Đang tải…</p> : ds.length === 0 ? <p className="qt-mo">Chưa có lá thư nào.</p> : (
+        <ul className="qt-ds-tv">
+          {ds.map((t) => {
+            const ngay = ngayMo(t)
+            return (
+              <li key={t.id} className={moId === t.id ? 'qt-sua-tv' : ''}>
+                <div>
+                  <strong>{t.nguoi_viet || 'Không ký tên'}{t.an ? ' · đã ẩn' : ''}</strong>
+                  <span>
+                    Viết {new Date(t.tao_luc).toLocaleDateString('vi-VN')} · {ngay ? `${ngay <= homNay ? 'đã mở' : 'mở'} ngày ${new Date(ngay + 'T00:00:00').toLocaleDateString('vi-VN')}` : 'chưa có ngày mở'}
+                    {t.mo_vao_chuong_id && ngayBuoi.get(t.mo_vao_chuong_id) ? ` (${ngayBuoi.get(t.mo_vao_chuong_id)!.tieu_de})` : ''} · {t.noi_dung.length} ký tự
+                  </span>
+                  {moId === t.id && <p style={{ whiteSpace: 'pre-wrap', margin: '8px 0 0' }}>{t.noi_dung}</p>}
+                </div>
+                <div className="qt-hang">
+                  <button type="button" className="qt-nut nho" onClick={() => setMoId(moId === t.id ? null : t.id)}>{moId === t.id ? 'Gấp lại' : 'Xem nội dung'}</button>
+                  <button type="button" className="qt-nut nho" onClick={() => lam(() => anThu(t.id, !t.an))}>{t.an ? 'Hiện lại' : 'Ẩn'}</button>
+                  <button type="button" className="qt-nut nho nguy" onClick={() => { if (window.confirm('Xóa hẳn lá thư này?')) lam(() => xoaThu(t.id)) }}>Xóa</button>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+      {loi && <p className="qt-loi" role="alert">{loi}</p>}
+    </section>
   )
 }

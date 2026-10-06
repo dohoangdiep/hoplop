@@ -6,8 +6,8 @@
 export const LIEN_HE = {
   /** Số Zalo nhận đặt trang, chỉ chữ số, ví dụ '0912345678'. Để trống thì nút hiện [số điện thoại]. */
   zalo: '',
-  tenHoKinhDoanh: '',
-  diaChi: '',
+  tenHoKinhDoanh: 'Công ty Cổ phần Phần mềm NEO',
+  diaChi: '31LK6A Làng Việt Kiều Châu Âu, Hà Nội',
   facebook: '',
 }
 
@@ -21,12 +21,12 @@ export const TINH_NANG: { ma: MaTinhNang; tieuDe: string; moTa: string; sapCo?: 
   { ma: 'gap-lai', tieuDe: 'Những lần gặp lại', moTa: 'Mỗi buổi họp lớp là một chương: ảnh tập thể, album, video ngắn của năm đó.' },
   { ma: 'nam-nay', tieuDe: 'Năm nay – năm ngoái', moTa: 'Ảnh tập thể các năm đặt cạnh nhau để thấy cả lớp đã thay đổi thế nào.' },
   { ma: 'qr', tieuDe: 'QR gửi ảnh tại buổi họp', moTa: 'Đặt một mã QR trên bàn tiệc. Ai chụp gì cũng gửi thẳng vào album của năm đó, không cần cài app.' },
-  { ma: 'hop-thu', tieuDe: 'Hộp thư thời gian', moTa: 'Viết thư cho cả lớp, hẹn đến lần họp 25 hay 30 năm mới mở.', sapCo: true },
+  { ma: 'hop-thu', tieuDe: 'Hộp thư thời gian', moTa: 'Viết thư cho cả lớp, hẹn đến lần họp 25 hay 30 năm mới mở.' },
 ]
 
 export const ZALO_SO_VOI_TRANG = {
   zalo: ['Ảnh bị nén mờ', 'Trôi mất sau vài trăm tin nhắn', 'Ảnh hết hạn, không tải lại được', 'Mỗi người giữ một ít, không ai đủ'],
-  trang: ['Giữ ảnh gốc, tải về bất cứ lúc nào', 'Xếp theo năm, theo từng lần họp', 'Gắn tên từng bạn trong ảnh', 'Riêng tư, có mật khẩu lớp'],
+  trang: ['Giữ ảnh gốc, tải về bất cứ lúc nào', 'Xếp theo năm, theo từng lần họp', 'Gắn tên từng bạn trong ảnh', 'Riêng tư, chỉ người có link lớp mới vào được'],
 }
 
 export const BUOC = [
@@ -59,7 +59,7 @@ export const GOI = {
 export const CAM_NHAN: { loi: string; lop: string }[] = []
 
 export const HOI_DAP = [
-  { hoi: 'Trang có riêng tư không?', dap: 'Mỗi lớp có địa chỉ riêng và mật khẩu riêng, không hiện trên Google. Ảnh gửi lên được ban liên lạc duyệt trước khi hiện.' },
+  { hoi: 'Trang có riêng tư không?', dap: 'Mỗi lớp có một mã riêng khó đoán, chỉ người có link hoặc mã QR mới vào được, không hiện trên Google. Lớp muốn chặt hơn thì bật thêm mật khẩu. Ảnh các bạn gửi lên được lớp trưởng duyệt trước khi hiện.' },
   { hoi: 'Lớp tôi không ai rành công nghệ thì sao?', dap: 'Không sao. Cả lớp chỉ cần bấm link hoặc quét QR để xem và gửi ảnh. Phần dựng trang chúng tôi làm hộ.' },
   { hoi: 'Ảnh được lưu bao lâu?', dap: 'Suốt thời gian lớp còn gia hạn. Ảnh gốc được giữ nguyên chất lượng và tải về được bất cứ lúc nào.' },
   { hoi: 'Ngừng gia hạn thì ảnh đi đâu?', dap: 'Trang chuyển sang chỉ xem trong 6 tháng, lớp tải toàn bộ ảnh về máy. Muốn quay lại thì khôi phục được.' },

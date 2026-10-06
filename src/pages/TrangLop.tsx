@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { useParams, useSearchParams, Link } from 'react-router-dom'
+import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { moLop, type KetQuaMoLop } from '../lib/lop'
 import { bienCss, layGiaoDien, napFont, DANH_SACH_GIAO_DIEN, GIAO_DIEN, type MaGiaoDien } from '../themes'
 import { Bia, SapHopLop, SoDoChoNgoi, KhoAnhXua, DongThoiGian, NamNayNamNgoai } from '../components/KhoiTrangLop'
 import { MA_LOP_MAU } from '../data/lopMau'
+import { HopThu } from '../components/HopThu'
+import { supabase } from '../lib/supabase'
 import '../styles/lop.css'
 
 function useNoIndex() {
@@ -41,14 +43,23 @@ export default function TrangLop() {
   const [tim] = useSearchParams()
   const [kq, setKq] = useState<KetQuaMoLop | undefined>(undefined)
   const [dangMo, setDangMo] = useState(false)
+  const dieuHuong = useNavigate()
   useNoIndex()
 
   useEffect(() => {
     let huy = false
     setKq(undefined)
-    moLop(ma).then((r) => !huy && setKq(r))
+    moLop(ma).then(async (r) => {
+      if (huy) return
+      // Link dùng tên gọi cũ của lớp: chuyển sang tên gọi mới
+      if (r.trangThai === 'khong-tim-thay') {
+        const { data } = await supabase.rpc('dia_chi_moi', { p_khoa: ma })
+        if (!huy && typeof data === 'string' && data && data !== ma.toLowerCase()) { dieuHuong(`/${data}`, { replace: true }); return }
+      }
+      if (!huy) setKq(r)
+    })
     return () => { huy = true }
-  }, [ma])
+  }, [ma, dieuHuong])
 
   const thuMatKhau = async (mk: string) => {
     setDangMo(true)
@@ -126,6 +137,7 @@ export default function TrangLop() {
           <KhoAnhXua lop={lop} />
           <DongThoiGian lop={lop} />
           <NamNayNamNgoai lop={lop} />
+          <HopThu lop={lop} khoa={ma} laLopMau={laLopMau} />
         </>
       )}
       <footer className="chan-trang khung">

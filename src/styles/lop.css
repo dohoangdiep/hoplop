@@ -200,3 +200,23 @@
   padding: 10px 16px; background: var(--mau-card); border-bottom: 1px solid var(--mau-line); font-size: 14px;
 }
 .thanh-lop-truong a { color: var(--mau-primary); font-weight: 600; min-height: 44px; display: inline-flex; align-items: center; }
+
+/* ---------- Hộp thư thời gian ---------- */
+.phong-thu { padding: 14px 16px; display: flex; gap: 14px; align-items: flex-start; }
+.phong-thu > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.phong-thu strong { font-size: 15px; }
+.phong-thu .chu-mo { font-size: 13px; }
+.phong-thu-icon {
+  flex-shrink: 0; width: 46px; height: 46px; border-radius: var(--bo-sm); display: flex; align-items: center; justify-content: center;
+  background: var(--mau-sticker); color: var(--mau-ink);
+}
+.ds-thu { display: flex; flex-direction: column; gap: 12px; }
+.la-thu { padding: 18px 18px 14px; display: flex; flex-direction: column; gap: 10px; }
+.la-thu-noi-dung {
+  margin: 0; white-space: pre-wrap; font-family: var(--font-hand); font-style: var(--font-hand-style);
+  font-size: 20px; line-height: 1.45; color: var(--mau-ink);
+}
+.la-thu footer { font-size: 13px; }
+.viet-thu { padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.hang-nut-thu { display: flex; gap: 8px; }
+.nut.nut-phu { flex: 0 0 auto; padding: 0 20px; background: var(--mau-card); color: var(--mau-primary); border: 1px solid var(--mau-line); }

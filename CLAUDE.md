@@ -147,7 +147,7 @@ Bật RLS cho mọi bảng. Viết migration SQL trong `supabase/migrations/`.
 - Trang lớp trưởng trên điện thoại: duyệt ảnh, tạo buổi họp, lấy QR
 
 **Đợt 2:**
-7. Hộp thư thời gian, tái hiện, góc thầy cô
+7. Hộp thư thời gian (đã làm, SQL 0007), tái hiện, góc thầy cô
 8. Xuất zip toàn bộ ảnh gốc
 9. Ngày hết hạn, chế độ chỉ xem, nhắc gia hạn
 10. Tên miền riêng, OG tags cho bot

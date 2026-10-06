@@ -48,3 +48,12 @@ export async function linkTaiGoc(duongDan: string, tenFile: string): Promise<str
   const { data } = await supabase.storage.from(BUCKET).createSignedUrl(duongDan, 600, { download: tenFile })
   return data?.signedUrl ?? null
 }
+
+/** Xóa hẳn nhiều file trên kho (chỉ quản trị có quyền). */
+export async function xoaNhieu(duongDan: (string | null | undefined)[]) {
+  const ds = [...new Set(duongDan.filter((d): d is string => !!d))]
+  for (let i = 0; i < ds.length; i += 100) {
+    const { error } = await supabase.storage.from(BUCKET).remove(ds.slice(i, i + 100))
+    if (error) throw error
+  }
+}

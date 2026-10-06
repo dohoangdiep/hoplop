@@ -147,3 +147,57 @@ export async function napDemo(lop: LopQuanTri, bao: (text: string) => void): Pro
   bao(`Xong! Đã nạp ${soAnh} ảnh demo.`)
   return { soAnh }
 }
+
+/**
+ * Xóa đúng những gì nút "Nạp ảnh demo" đã tạo, giữ nguyên dữ liệu thật của lớp:
+ *  - ảnh có người gửi "Ảnh minh họa" (cả file trên kho)
+ *  - các bạn có họ tên nằm trong danh sách 24 bạn mẫu
+ *  - các buổi họp minh họa (mô tả "(nội dung minh họa)" hoặc địa điểm "Nhà hàng [Tên nhà hàng]") chưa có ảnh thật
+ */
+export async function xoaDemo(lop: LopQuanTri, bao: (s: string) => void): Promise<{ anh: number; ban: number; buoi: number }> {
+  const { xoaNhieu } = await import('./storage')
+  bao('Đang tìm dữ liệu demo…')
+  const { data: anh, error: e1 } = await supabase.from('anh').select('id, duong_dan_xem, duong_dan_goc')
+    .eq('lop_id', lop.id).eq('nguoi_gui_ten', 'Ảnh minh họa')
+  if (e1) throw e1
+  const idAnh = (anh ?? []).map((a) => a.id)
+  if (idAnh.length) {
+    bao(`Đang xóa ${idAnh.length} ảnh minh họa…`)
+    await xoaNhieu((anh ?? []).flatMap((a) => [a.duong_dan_xem, a.duong_dan_goc]))
+    // Gỡ các chỗ đang trỏ tới ảnh sắp xóa (ảnh bìa, ảnh ngày ấy/bây giờ, ảnh tập thể)
+    await supabase.from('lop').update({ anh_bia_id: null }).eq('id', lop.id).in('anh_bia_id', idAnh)
+    await supabase.from('thanh_vien').update({ anh_xua_id: null }).eq('lop_id', lop.id).in('anh_xua_id', idAnh)
+    await supabase.from('thanh_vien').update({ anh_nay_id: null }).eq('lop_id', lop.id).in('anh_nay_id', idAnh)
+    await supabase.from('chuong').update({ anh_tap_the_id: null }).eq('lop_id', lop.id).in('anh_tap_the_id', idAnh)
+    for (let i = 0; i < idAnh.length; i += 100) {
+      const { error } = await supabase.from('anh').delete().in('id', idAnh.slice(i, i + 100))
+      if (error) throw error
+    }
+  }
+
+  bao('Đang xóa các bạn mẫu…')
+  // Chỉ xóa bạn trùng cả họ tên, biệt danh lẫn câu lưu bút với danh sách mẫu: lớp thật có bạn trùng tên vẫn an toàn
+  const mau = new Set(phanTichDanhSach(DS_DEMO).map((t) => `${t.ho_ten}|${t.biet_danh}|${t.cau_luu_but}`))
+  const { data: tv, error: e2 } = await supabase.from('thanh_vien').select('id, ho_ten, biet_danh, cau_luu_but').eq('lop_id', lop.id)
+  if (e2) throw e2
+  const idBan = (tv ?? []).filter((t) => mau.has(`${t.ho_ten}|${t.biet_danh}|${t.cau_luu_but}`)).map((t) => t.id)
+  if (idBan.length) {
+    const { error } = await supabase.from('thanh_vien').delete().in('id', idBan)
+    if (error) throw error
+  }
+  const ban = idBan
+
+  bao('Đang xóa các buổi họp minh họa…')
+  const { data: buoi } = await supabase.from('chuong').select('id, mo_ta, dia_diem').eq('lop_id', lop.id)
+  const buoiDemo = (buoi ?? []).filter((c) => (c.mo_ta ?? '').includes('(nội dung minh họa)') || c.dia_diem === 'Nhà hàng [Tên nhà hàng]')
+  let soBuoi = 0
+  for (const c of buoiDemo) {
+    const { count } = await supabase.from('anh').select('id', { count: 'exact', head: true }).eq('chuong_id', c.id)
+    if (count) continue // buổi đã có ảnh thật thì giữ lại
+    const { error } = await supabase.from('chuong').delete().eq('id', c.id)
+    if (!error) soBuoi++
+  }
+  const kq = { anh: idAnh.length, ban: ban.length, buoi: soBuoi }
+  bao(`Xong: đã xóa ${kq.anh} ảnh, ${kq.ban} bạn mẫu, ${kq.buoi} buổi họp minh họa.`)
+  return kq
+}

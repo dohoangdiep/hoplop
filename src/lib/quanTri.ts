@@ -406,3 +406,46 @@ export async function datAnhTapThe(chuongId: string, anhId: string) {
   await capNhatAnh(anhId, { trang_thai: 'da-duyet' })
   await suaChuong(chuongId, { anh_tap_the_id: anhId })
 }
+
+/* ---------------- Tên gọi ---------------- */
+/** Đặt tên gọi (rỗng = bỏ). Tên cũ được giữ để link cũ vẫn chuyển hướng. */
+export async function datTenGoi(lopId: string, tenGoi: string): Promise<string | null> {
+  const { data, error } = await supabase.rpc('qt_dat_ten_goi', { p_lop: lopId, p_ten_goi: tenGoi })
+  if (error) throw new Error(error.code === 'PGRST202' ? 'Cần chạy file SQL 0007 trước.' : error.message)
+  const loi: Record<string, string> = {
+    dang: 'Tên gọi chỉ gồm chữ thường không dấu, số và dấu gạch ngang, dài 3–40 ký tự, không bắt đầu hay kết thúc bằng dấu gạch.',
+    'giong-ma': 'Tên gọi không được là 6 ký tự giống mã lớp. Thêm dấu gạch hoặc số, vd "12a1-2006".',
+    trung: 'Tên gọi này đã có lớp khác dùng (hoặc là từ dành riêng của hệ thống).',
+  }
+  if (data?.loi) throw new Error(loi[data.loi] ?? 'Có lỗi, thử lại nhé.')
+  return data.ten_goi ?? null
+}
+
+/* ---------------- Hộp thư thời gian ---------------- */
+export interface ThuQT {
+  id: string
+  nguoi_viet: string | null
+  noi_dung: string
+  mo_vao_ngay: string | null
+  mo_vao_chuong_id: string | null
+  an: boolean
+  tao_luc: string
+}
+
+export async function dsThuQT(lopId: string): Promise<ThuQT[]> {
+  const { data, error } = await supabase.from('thu_hen_gio')
+    .select('id, nguoi_viet, noi_dung, mo_vao_ngay, mo_vao_chuong_id, an, tao_luc')
+    .eq('lop_id', lopId).order('tao_luc', { ascending: false })
+  if (error) throw error
+  return (data ?? []) as ThuQT[]
+}
+
+export async function anThu(id: string, an: boolean) {
+  const { error } = await supabase.from('thu_hen_gio').update({ an }).eq('id', id)
+  if (error) throw error
+}
+
+export async function xoaThu(id: string) {
+  const { error } = await supabase.from('thu_hen_gio').delete().eq('id', id)
+  if (error) throw error
+}

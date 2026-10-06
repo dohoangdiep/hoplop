@@ -35,7 +35,8 @@
 | `0003_anh.sql` | `tao_luot_gui`, `xong_tai_anh`, quyền tải/xem ảnh | Đã chạy |
 | `0004_muc_chan_dung.sql` | Thêm mục ảnh `chan-dung` | Đã chạy (lỗi demo "Không kết nối được" trước đây là do thiếu file này) |
 | `0005_chuong.sql` | `thong_tin_qr`, `xem_lop` trả thêm mô tả, video, ảnh tập thể từng buổi | Đã chạy (chủ dự án đã thử chương và ảnh chương) |
-| `0006_lop_truong_gui_anh_chung.sql` | Đợt 1b: lớp trưởng (SĐT + PIN), vào lớp bằng mã, trang gửi ảnh chung, công tắc "Luôn cần mật khẩu" | **Chưa chạy.** Code mới trên `main` cần file này (thiếu thì trang lớp báo không tìm thấy lớp) |
+| `0006_lop_truong_gui_anh_chung.sql` | Đợt 1b: lớp trưởng (SĐT + PIN), vào lớp bằng mã, trang gửi ảnh chung, công tắc "Luôn cần mật khẩu" | Đã chạy (06/10) |
+| `0007_hop_thu_ten_goi.sql` | Hộp thư thời gian (`thu_cua_lop`, `viet_thu`), đổi tên gọi (`qt_dat_ten_goi`, bảng `ten_goi_cu`, `dia_chi_moi`) | **Chưa chạy.** Thiếu thì Hộp thư hiện trống và báo lỗi khi gửi thư; ô Tên gọi báo cần chạy 0007 |
 
 Quản trị hệ thống: user của chủ dự án đã được thêm vào bảng `quan_tri_he_thong`.
 
@@ -103,17 +104,31 @@ Theo `CLAUDE.md` mục 5 và 7. **Cần chạy `0006_lop_truong_gui_anh_chung.sq
 3. Ở máy khác, mở `/<mã lớp>/gui-anh`, gửi 2 ảnh → thấy "Đang chờ duyệt"; lớp trưởng thấy 2 ảnh ở Chờ duyệt, duyệt một, ẩn một → kiểm tra tab Đã ẩn có hiện hình không (xem ghi chú header ở trên).
 4. Tạo buổi họp ở trang lớp trưởng → tải tờ QR → quét bằng điện thoại.
 
+## 5b. Đã làm thêm ngày 06/10 (chiều)
+
+- **Hộp thư thời gian** trên trang lớp (khối cuối, `id="thu"`; nút "Viết thư cho lớp" ở ô Sắp họp lớp mở sẵn ô viết):
+  - Hẹn mở vào một buổi họp sắp tới (theo ngày của buổi; buổi đổi ngày thì thư đổi theo), hoặc 1/5/10 năm nữa, hoặc tự chọn ngày. Ngày mở phải sau hôm nay (giờ Việt Nam).
+  - Trước ngày mở, máy chủ không trả nội dung: trang chỉ hiện phong thư "N lá thư đang niêm phong · mở ngày … · còn N ngày · từ …". Máy nhớ thư mình đã viết ("có 1 thư của bạn").
+  - Thư đã mở hiện trước, chữ viết tay theo giao diện lớp. Lớp mẫu `/xemmau` có 5 thư mẫu.
+  - Quản trị → trang lớp → **Hộp thư thời gian**: xem nội dung (khi cần kiểm tra), Ẩn/Hiện, Xóa.
+  - Trang chủ bỏ nhãn "Sắp có" ở tính năng này.
+- **Tên gọi** (quản trị → trang lớp → Tên gọi): đặt, đổi hoặc bỏ. Link tên cũ tự chuyển sang tên mới (vẫn hỏi mật khẩu). Tên gọi không được giống dạng mã lớp 6 ký tự (tránh mã lớp sinh sau này trùng và cướp link). Bỏ tên gọi thì link tên cũ hết dùng: không bao giờ chuyển sang mã lớp, vì mã lớp vào được không cần mật khẩu.
+- **Xóa dữ liệu demo** (quản trị → trang lớp → Dữ liệu demo, luôn hiện kể cả khi tắt `VITE_BAT_DEMO`): chỉ xóa ảnh có người gửi "Ảnh minh họa" (cả file trên kho), các bạn trùng cả họ tên + biệt danh + lưu bút với danh sách mẫu, và buổi họp minh họa chưa có ảnh thật.
+- Trang chủ: điền tên **Công ty Cổ phần Phần mềm NEO**, địa chỉ **31LK6A Làng Việt Kiều Châu Âu, Hà Nội**. Câu "riêng tư" đổi cho đúng cách vào lớp mới.
+- Đã thử: 0001→0007 trên Postgres cục bộ; bộ thử đầu-cuối 31 bước trên bản build (điện thoại 390px) đều đạt.
+
 ## 6. Việc tiếp theo
 
 **Còn lại của Đợt 1:**
 - Chạy `0006` và thử theo các bước trên; gửi ảnh chụp màn hình nếu có chỗ lạ.
-- Điền số Zalo, tên hộ kinh doanh, địa chỉ trong `src/data/trangChu.ts`; thêm cảm nhận thật khi có lớp đầu tiên. Trang Chính sách bảo mật / Điều khoản (chưa có, nên chưa đặt link).
-- Tắt `VITE_BAT_DEMO` khi thử xong; có thể thêm nút "Xóa dữ liệu demo".
-- (Không gấp) Đổi tên gọi của lớp trong quản trị (cột có sẵn, chưa có ô nhập); tên cũ chuyển hướng.
+- Chạy `0007`, thử Hộp thư thời gian và đổi tên gọi.
+- **Còn thiếu số Zalo** nhận đặt trang (`src/data/trangChu.ts`, mục `zalo`); thêm cảm nhận thật khi có lớp đầu tiên. Trang Chính sách bảo mật / Điều khoản (chưa có, nên chưa đặt link).
+- Tắt `VITE_BAT_DEMO` khi thử xong, rồi bấm "Xóa dữ liệu demo" ở từng lớp thử.
+- (Không gấp) Lớp trưởng ẩn thư không phù hợp ngay trên điện thoại (hiện chỉ quản trị làm được).
 - (Không gấp) SMTP riêng cho email đăng nhập của chủ dịch vụ.
 
 **Đợt 2 (theo `CLAUDE.md` mục 9):**
-7. Hộp thư thời gian, Tái hiện (ảnh xưa – ảnh chụp lại cùng tư thế), Góc thầy cô
+7. ~~Hộp thư thời gian~~ (đã làm), Tái hiện (ảnh xưa – ảnh chụp lại cùng tư thế), Góc thầy cô
 8. Xuất zip toàn bộ ảnh gốc
 9. Ngày hết hạn, chế độ chỉ xem, nhắc gia hạn
 10. Tên miền riêng, OG tags cho bot (Cloudflare Pages Function)

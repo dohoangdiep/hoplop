@@ -4,13 +4,13 @@ import type { Session } from '@supabase/supabase-js'
 import QRCode from 'qrcode'
 import { supabase } from '../lib/supabase'
 import {
-  laQuanTriHeThong, danhSachLop, layLop, taoLop, datMatKhau, taoMatKhauLop, capNhatLop, locLop,
+  laQuanTriHeThong, danhSachLop, layLop, taoLop, datMatKhau, taoMatKhauLop, capNhatLop, locLop, datTenGoi,
   themLopTruong, taoPinMoi, xoaLopTruong, tinNhanLopTruong, linkZalo,
   type LopQuanTri, type LopDanhSach, type LopTruongQT, type KetQuaThemLT,
 } from '../lib/quanTri'
 import { hienSdt } from '../lib/lopTruong'
 import { DANH_SACH_GIAO_DIEN, GIAO_DIEN, type MaGiaoDien } from '../themes'
-import { QuanLyThanhVien, SuaSoDo, QuanLyAnh, QuanLyChuong, NutNapDemo, BAT_DEMO } from './QuanTriLop'
+import { QuanLyThanhVien, SuaSoDo, QuanLyAnh, QuanLyChuong, QuanLyThu, NutNapDemo, NutXoaDemo, BAT_DEMO } from './QuanTriLop'
 import type { ThanhVienQT, ChuongQT } from '../lib/quanTri'
 import '../styles/quantri.css'
 
@@ -163,6 +163,39 @@ function DanhSach() {
         </section>
       )}
     </main>
+  )
+}
+
+/* ---------------- Tên gọi ---------------- */
+function SuaTenGoi({ lop, onDoi }: { lop: LopQuanTri; onDoi: (ten: string | null) => void }) {
+  const [ten, setTen] = useState(lop.ten_goi ?? '')
+  const [dang, setDang] = useState(false)
+  const [loi, setLoi] = useState('')
+  const [ok, setOk] = useState('')
+  const luu = async (e: FormEvent) => {
+    e.preventDefault(); setLoi(''); setOk(''); setDang(true)
+    try {
+      const moi = await datTenGoi(lop.id, ten)
+      onDoi(moi); setTen(moi ?? '')
+      setOk(moi ? `Đã lưu. Link mới: ${linkLop(moi)}${lop.ten_goi ? ' (link tên cũ vẫn tự chuyển sang tên mới)' : ''}` : 'Đã bỏ tên gọi.')
+    } catch (er) { setLoi((er as Error).message) } finally { setDang(false) }
+  }
+  return (
+    <section className="qt-muc">
+      <h2>Tên gọi (link dễ nhớ)</h2>
+      <p className="qt-mo" style={{ fontSize: 13, marginTop: 0 }}>
+        Tùy chọn, vd <code>12a1-thanhmien</code>. Vào bằng tên gọi luôn phải nhập mật khẩu lớp (vì tên gọi dễ đoán). Mã lớp <code>{lop.ma}</code> và QR đã in vẫn dùng như cũ.
+      </p>
+      <form onSubmit={luu} className="qt-form">
+        <label htmlFor="ten-goi">Tên gọi</label>
+        <div className="qt-hang" style={{ flexWrap: 'nowrap' }}>
+          <input id="ten-goi" value={ten} onChange={(e) => setTen(e.target.value.toLowerCase().replace(/\s+/g, '-'))} placeholder="12a1-thanhmien" autoCapitalize="none" autoCorrect="off" />
+          <button className="qt-nut" disabled={dang}>{dang ? 'Đang lưu…' : 'Lưu'}</button>
+        </div>
+      </form>
+      {ok && <p className="qt-ok" role="status">{ok}</p>}
+      {loi && <p className="qt-loi" role="alert">{loi}</p>}
+    </section>
   )
 }
 
@@ -416,6 +449,7 @@ function ChiTietLop() {
       <ChonGiaoDien value={lop.giao_dien} onChange={doiGiaoDien} />
 
       <QuanLyLopTruong lop={lop} />
+      <SuaTenGoi lop={lop} onDoi={(t) => setLop({ ...lop, ten_goi: t })} />
 
       <section className="qt-muc">
         <h2>Mật khẩu lớp</h2>
@@ -442,13 +476,13 @@ function ChiTietLop() {
       <SuaSoDo lopId={lop.id} thanhVien={thanhVien} />
       <QuanLyChuong lopId={lop.id} maLop={lop.ma} tenLop={lop.ten_lop} truong={lop.truong} onDoi={setChuong} />
       <QuanLyAnh lopId={lop.id} maLop={lop.ma} thanhVien={thanhVien} chuong={chuong} />
+      <QuanLyThu lopId={lop.id} chuong={chuong} />
 
-      {BAT_DEMO && (
-        <section className="qt-muc">
-          <h2>Dữ liệu demo</h2>
-          <NutNapDemo lops={[lop]} nhan="Nạp ảnh demo cho lớp này" />
-        </section>
-      )}
+      <section className="qt-muc">
+        <h2>Dữ liệu demo</h2>
+        {BAT_DEMO && <NutNapDemo lops={[lop]} nhan="Nạp ảnh demo cho lớp này" />}
+        <NutXoaDemo lop={lop} />
+      </section>
 
       {thongBao && <p className="qt-ok" role="status">{thongBao}</p>}
     </main>

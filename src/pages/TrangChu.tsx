@@ -173,7 +173,7 @@ export default function TrangChu() {
     dieuHuong(`/${k}`)
   }
 
-  const chanTrang = ['© thanhxuan.vn', LIEN_HE.tenHoKinhDoanh || '[Tên hộ kinh doanh]', LIEN_HE.diaChi || '[Địa chỉ]']
+  const chanTrang = ['© thanhxuan.vn', LIEN_HE.tenHoKinhDoanh || '[Tên doanh nghiệp]', LIEN_HE.diaChi || '[Địa chỉ]']
 
   return (
     <div className="tc">

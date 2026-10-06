@@ -1,3 +1,4 @@
+import type { LaThu } from '../lib/thu'
 import type { Lop, ThanhVien, ChoNgoi } from '../lib/types'
 
 /** Lớp mẫu công khai để khách xem thử. Dữ liệu giả, không phải người thật. */
@@ -82,3 +83,14 @@ export const LOP_MAU: Lop = {
   ],
   soAnhDaLuu: 1248,
 }
+
+/** Thư mẫu cho Hộp thư thời gian của lớp mẫu (nội dung minh họa) */
+export const THU_MAU: LaThu[] = [
+  { id: 't1', nguoiViet: 'Lan Béo', taoLuc: '2025-02-01', ngayMo: '2026-02-20', buoi: 'Họp lớp 20 năm · Tết Bính Ngọ', daMo: true,
+    noiDung: 'Gửi cả lớp của năm sau: hy vọng lúc mở thư này, bàn cuối vẫn ồn nhất và Hùng vẫn về muộn nhất. Nhớ mang ảnh cũ đi nhé!' },
+  { id: 't2', nguoiViet: 'Sơn Lớp Trưởng', taoLuc: '2025-02-01', ngayMo: '2026-02-20', buoi: 'Họp lớp 20 năm · Tết Bính Ngọ', daMo: true,
+    noiDung: 'Hai mươi năm rồi. Cảm ơn các bạn đã luôn quay về. Năm nay điểm danh đủ 40 bạn thì tớ khao cả lớp.' },
+  { id: 't3', nguoiViet: 'Mai Mực', taoLuc: '2026-02-20', ngayMo: '2027-02-10', buoi: 'Họp lớp 21 năm · Mùng 4 Tết', daMo: false, noiDung: null },
+  { id: 't4', nguoiViet: 'Nam Toán', taoLuc: '2026-02-20', ngayMo: '2027-02-10', buoi: 'Họp lớp 21 năm · Mùng 4 Tết', daMo: false, noiDung: null },
+  { id: 't5', nguoiViet: 'Hà Kều', taoLuc: '2026-02-21', ngayMo: '2031-02-20', buoi: null, daMo: false, noiDung: null },
+]
