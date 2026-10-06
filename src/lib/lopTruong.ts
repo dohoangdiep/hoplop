@@ -118,6 +118,12 @@ async function goi<T = any>(ham: string, thamSo: Record<string, unknown>): Promi
       'tieu-de': 'Bạn đặt tên cho buổi họp nhé.',
       video: 'Link video phải bắt đầu bằng https://',
       'buoi-sai': 'Không tìm thấy buổi họp này.',
+      'thieu-anh': 'Cần đủ cả ảnh ngày ấy và ảnh bây giờ.',
+      'anh-sai': 'Ảnh này không dùng được, bạn chọn lại ảnh khác nhé.',
+      nam: 'Năm chưa đúng, bạn nhập 4 chữ số, vd 2005.',
+      'ho-ten': 'Bạn nhập họ tên thầy cô nhé.',
+      dai: 'Câu nói dài quá, bạn viết gọn lại nhé.',
+      'khong-tim-thay': 'Không tìm thấy mục này, bạn tải lại trang nhé.',
     }
     throw new Error(tb[data.loi] ?? 'Có lỗi, bạn thử lại nhé.')
   }
@@ -150,3 +156,30 @@ export const xoaBuoiHop = (lopId: string, id: string) => goi('lt_xoa_chuong', { 
 
 export const datAnhTapThe = (lopId: string, chuongId: string, anhId: string) =>
   goi('lt_dat_anh_tap_the', { p_lop: lopId, p_chuong_id: chuongId, p_anh_id: anhId })
+
+/* ---------------- Tái hiện và Góc thầy cô ---------------- */
+export interface TaiHienLT {
+  id: string; anh_xua_id: string | null; anh_nay_id: string | null; chu_thich: string | null
+  nam_xua: number | null; nam_nay: number | null; xua: string | null; nay: string | null
+}
+export interface ThayCoLT {
+  id: string; ho_ten: string; vai_tro: string | null; mon: string | null; cau_noi: string | null
+  anh_id: string | null; anh: string | null
+}
+
+export const dsThem = (lopId: string) => goi<{ tai_hien: TaiHienLT[]; thay_co: ThayCoLT[] }>('lt_ds_them', { p_lop: lopId })
+
+/** Ảnh vừa tải lên cho Tái hiện / thầy cô: thành ảnh riêng, không hiện trong kho ảnh xưa */
+export const datAnhRieng = (lopId: string, anhId: string) => goi('lt_dat_anh_rieng', { p_lop: lopId, p_anh_id: anhId })
+
+export const luuTaiHienLT = (lopId: string, id: string | null, c: { xua: string; nay: string; chuThich: string; namXua: number | null; namNay: number | null }) =>
+  goi<{ id: string }>('lt_luu_tai_hien', {
+    p_lop: lopId, p_id: id, p_anh_xua: c.xua, p_anh_nay: c.nay, p_chu_thich: c.chuThich, p_nam_xua: c.namXua, p_nam_nay: c.namNay,
+  })
+export const xoaTaiHienLT = (lopId: string, id: string) => goi('lt_xoa_tai_hien', { p_lop: lopId, p_id: id })
+
+export const luuThayCoLT = (lopId: string, id: string | null, c: { hoTen: string; vaiTro: string; mon: string; cauNoi: string; anhId: string | null }) =>
+  goi<{ id: string }>('lt_luu_thay_co', {
+    p_lop: lopId, p_id: id, p_ho_ten: c.hoTen, p_vai_tro: c.vaiTro, p_mon: c.mon, p_cau_noi: c.cauNoi, p_anh_id: c.anhId,
+  })
+export const xoaThayCoLT = (lopId: string, id: string) => goi('lt_xoa_thay_co', { p_lop: lopId, p_id: id })

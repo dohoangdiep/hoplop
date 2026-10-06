@@ -8,6 +8,7 @@ import { MUC_ANH, TEN_MUC, maNoiAnh, giaiNoiAnh, noiCuaAnh } from '../lib/guiAnh
 import { linkXemNhieu } from '../lib/storage'
 import { linkQrChuong, veToQr } from '../lib/toQr'
 import { bienCss, layGiaoDien, napFont, type MaGiaoDien } from '../themes'
+import { TaiHienThayCo } from './LopTruongThem'
 import '../styles/lop.css'
 import '../styles/loptruong.css'
 
@@ -375,7 +376,7 @@ function TrangMotLop({ dsLop, onHetPhien, onDangXuat }: { dsLop: LopCuaToi[]; on
   const vars = useKhung(lopCua?.giao_dien)
   const [dl, setDl] = useState<DuLieuLT | null>(null)
   const [url, setUrl] = useState<Record<string, string>>({})
-  const [tab, setTab] = useState<'anh' | 'buoi'>('anh')
+  const [tab, setTab] = useState<'anh' | 'buoi' | 'them'>('anh')
   const [loi, setLoi] = useState('')
   const [thongBao, setThongBao] = useState('')
 
@@ -431,6 +432,9 @@ function TrangMotLop({ dsLop, onHetPhien, onDangXuat }: { dsLop: LopCuaToi[]; on
           <button type="button" role="tab" className="tab lt-tab" aria-selected={tab === 'buoi'} onClick={() => setTab('buoi')}>
             Buổi họp & mã QR
           </button>
+          <button type="button" role="tab" className="tab lt-tab" aria-selected={tab === 'them'} onClick={() => setTab('them')}>
+            Tái hiện & thầy cô
+          </button>
         </div>
       </header>
 
@@ -439,7 +443,8 @@ function TrangMotLop({ dsLop, onHetPhien, onDangXuat }: { dsLop: LopCuaToi[]; on
         {loi && <p className="the lt-the lt-loi" role="alert">{loi}</p>}
         {!dl ? <p className="chu-mo">{loi ? '' : 'Đang tải…'}</p>
           : tab === 'anh' ? <DuyetAnh dl={dl} url={url} lam={lam} />
-          : <BuoiHop dl={dl} lam={lam} />}
+          : tab === 'buoi' ? <BuoiHop dl={dl} lam={lam} />
+          : <TaiHienThayCo dl={dl} url={url} lam={lam} onHetPhien={onHetPhien} />}
 
         <div className="lt-chan">
           {dsLop.length > 1 && <Link to="/lop-truong" className="lt-link">Đổi lớp</Link>}

@@ -61,7 +61,7 @@ Biến môi trường: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (key
 
 ## 5. Ba vai người dùng (đã chốt 06/10/2026)
 
-Với mô hình làm hộ, chủ dịch vụ dựng phần nặng (thành viên, sơ đồ, ảnh chân dung, giao diện). Lớp trưởng chỉ hơn thành viên ở **duyệt ảnh** và **tạo buổi họp**.
+Với mô hình làm hộ, chủ dịch vụ dựng phần nặng (thành viên, sơ đồ, ảnh chân dung, giao diện). Lớp trưởng hơn thành viên ở **duyệt ảnh**, **tạo buổi họp**, và (từ 06/10 tối) **tự làm Tái hiện, Góc thầy cô**.
 
 | | Thành viên | Lớp trưởng (tối đa 2 người: trưởng + phó, quyền như nhau) | Chủ dịch vụ (quản trị hệ thống) |
 |---|---|---|---|
@@ -70,6 +70,7 @@ Với mô hình làm hộ, chủ dịch vụ dựng phần nặng (thành viên,
 | Gửi ảnh (chọn "chụp hồi nào") | Có, **vào hàng chờ duyệt** | Có, hiện ngay | Có, hiện ngay |
 | Duyệt / ẩn ảnh, xếp mục hoặc buổi | | Có | Có |
 | Tạo buổi họp, lấy QR | | Có | Có |
+| Tái hiện, Góc thầy cô (thêm/sửa/xóa) | | Có | Có |
 | Thành viên, sơ đồ, giao diện, gia hạn, tài khoản lớp trưởng | | | Có |
 
 **Tài khoản lớp trưởng:** chủ dịch vụ tạo khi tạo lớp (họ tên + SĐT), hệ thống sinh PIN 6 số và soạn tin nhắn Zalo gửi riêng. Quên PIN hoặc đổi người: chủ dịch vụ tìm lớp theo SĐT rồi "Tạo PIN mới" / xóa người. Nhập sai PIN 5 lần thì khóa 15 phút. **Không dùng SĐT một mình làm thông tin đăng nhập** (cả lớp đều biết SĐT lớp trưởng). Không gửi SMS, không cần email cho lớp trưởng.
@@ -147,7 +148,7 @@ Bật RLS cho mọi bảng. Viết migration SQL trong `supabase/migrations/`.
 - Trang lớp trưởng trên điện thoại: duyệt ảnh, tạo buổi họp, lấy QR
 
 **Đợt 2:**
-7. Hộp thư thời gian (SQL 0007), tái hiện, góc thầy cô (SQL 0008): đã làm
+7. Hộp thư thời gian (SQL 0007), tái hiện, góc thầy cô (SQL 0008; lớp trưởng tự làm: SQL 0009): đã làm
 8. Xuất zip toàn bộ ảnh gốc
 9. Ngày hết hạn, chế độ chỉ xem, nhắc gia hạn
 10. Tên miền riêng, OG tags cho bot

@@ -78,3 +78,22 @@
 .lt-ds-buoi strong { font-size: 16px; }
 .lt-qr { display: flex; flex-direction: column; gap: 10px; padding-top: 6px; }
 .lt-qr img { width: 100%; max-width: 300px; align-self: center; border: 1px solid var(--mau-line); border-radius: var(--bo-sm); }
+
+/* Tái hiện & thầy cô */
+.lt-tab-chinh { flex-wrap: wrap; }
+.lt-hai-cot { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.lt-o-chon { display: flex; flex-direction: column; gap: 6px; min-width: 0; grid-column: span 1; }
+.lt-form > .lt-o-chon { max-width: 260px; }
+.lt-xem-chon { width: 100%; aspect-ratio: 4 / 5; height: auto; padding: 0; overflow: hidden; font-size: 13px; }
+.lt-xem-chon img { width: 100%; height: 100%; object-fit: cover; }
+.lt .lt-o-chon .lt-hang-nut .nut { flex: 1 1 100%; font-size: 13px; min-height: 44px; }
+.lt-nut-tai { position: relative; cursor: pointer; }
+.lt-chon-kho { padding: 10px; display: flex; flex-direction: column; gap: 8px; grid-column: 1 / -1; }
+.lt-cap-anh { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.lt-cap-anh figcaption { text-align: center; font-family: var(--font-display); font-weight: var(--font-display-weight); color: var(--mau-primary); }
+.lt-thay-co { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 12px; }
+.lt-thay-co > div:last-child { display: flex; flex-direction: column; gap: 3px; }
+.lt-anh-thay-co { width: 72px; height: 90px; padding: 0; overflow: hidden; }
+.lt-anh-thay-co img { width: 100%; height: 100%; object-fit: cover; }
+/* Nút "Tải ảnh mới" là <label>: giữ dáng nút kể cả khi nằm trong form */
+.lt .lt-form label.nut { display: flex; align-items: center; justify-content: center; margin-top: 0; font-weight: 600; font-size: 13px; }

@@ -37,7 +37,8 @@
 | `0005_chuong.sql` | `thong_tin_qr`, `xem_lop` trả thêm mô tả, video, ảnh tập thể từng buổi | Đã chạy (chủ dự án đã thử chương và ảnh chương) |
 | `0006_lop_truong_gui_anh_chung.sql` | Đợt 1b: lớp trưởng (SĐT + PIN), vào lớp bằng mã, trang gửi ảnh chung, công tắc "Luôn cần mật khẩu" | Đã chạy (06/10) |
 | `0007_hop_thu_ten_goi.sql` | Hộp thư thời gian (`thu_cua_lop`, `viet_thu`), đổi tên gọi (`qt_dat_ten_goi`, bảng `ten_goi_cu`, `dia_chi_moi`) | Chạy chưa? (chủ dự án xác nhận) |
-| `0008_tai_hien_thay_co.sql` | Tái hiện + Góc thầy cô: thêm cột năm/thứ tự, hàm `xem_lop_them` cho trang lớp | **Chưa chạy.** Thiếu thì hai mục này không hiện trên trang lớp; quản trị báo cần chạy 0008 |
+| `0008_tai_hien_thay_co.sql` | Tái hiện + Góc thầy cô: thêm cột năm/thứ tự, hàm `xem_lop_them` cho trang lớp | Chạy chưa? (chủ dự án xác nhận) |
+| `0009_lop_truong_tai_hien_thay_co.sql` | Lớp trưởng/lớp phó tự làm Tái hiện, Góc thầy cô: `lt_ds_them`, `lt_luu_tai_hien`, `lt_xoa_tai_hien`, `lt_luu_thay_co`, `lt_xoa_thay_co`, `lt_dat_anh_rieng` | **Chưa chạy** |
 
 Quản trị hệ thống: user của chủ dự án đã được thêm vào bảng `quan_tri_he_thong`.
 
@@ -126,11 +127,19 @@ Theo `CLAUDE.md` mục 5 và 7. **Cần chạy `0006_lop_truong_gui_anh_chung.sq
 - Lớp mẫu `/xemmau` có 1 cặp Tái hiện và 2 thầy cô mẫu (khung ảnh trống, tên để `[...]`).
 - Bộ thử đầu-cuối: 35/35 bước đạt. Phần quản trị của hai mục này chưa thử tự động (cần đăng nhập email); chủ dự án thử tay.
 
+## 5d. Lớp trưởng tự làm Tái hiện và Góc thầy cô (06/10, tối)
+
+- Chủ dự án chốt: lớp trưởng và lớp phó (quyền như nhau) tự thêm/sửa/xóa Tái hiện và Góc thầy cô. Đã cập nhật bảng vai trò trong `CLAUDE.md` mục 5.
+- Trang `/lop-truong` có tab thứ ba **"Tái hiện & thầy cô"**. Mỗi ô ảnh: "Chọn ảnh của lớp" (ảnh xưa hoặc ảnh buổi họp các bạn đã gửi) hoặc "Tải ảnh mới". Ảnh chọn vào đây tự được duyệt.
+- Ảnh tải mới ở tab này thành ảnh riêng (mục `chan-dung`, không lẫn vào kho ảnh xưa) qua `lt_dat_anh_rieng`; hàm này chỉ áp dụng cho ảnh tải lên trong 1 giờ, để không giấu được ảnh cũ trong kho.
+- Mọi hàm `lt_*` mới kiểm token phiên và chỉ nhận ảnh thuộc chính lớp đó. Quản trị vẫn làm được như trước.
+- Bộ thử đầu-cuối: 39/39 bước đạt (thêm luồng lớp trưởng: chọn 1 ảnh của lớp + tải 1 ảnh mới thành cặp Tái hiện, thêm thầy cô có ảnh, kiểm tra trên trang lớp).
+
 ## 6. Việc tiếp theo
 
 **Còn lại của Đợt 1:**
 - Chạy `0006` và thử theo các bước trên; gửi ảnh chụp màn hình nếu có chỗ lạ.
-- Chạy `0007` (nếu chưa) và `0008`; thử Hộp thư, đổi tên gọi, Tái hiện, Góc thầy cô.
+- Chạy `0007`, `0008` (nếu chưa) và `0009`; thử Hộp thư, đổi tên gọi, Tái hiện, Góc thầy cô (cả ở quản trị và trang lớp trưởng).
 - **Còn thiếu số Zalo** nhận đặt trang (`src/data/trangChu.ts`, mục `zalo`); thêm cảm nhận thật khi có lớp đầu tiên. Trang Chính sách bảo mật / Điều khoản (chưa có, nên chưa đặt link).
 - Tắt `VITE_BAT_DEMO` khi thử xong, rồi bấm "Xóa dữ liệu demo" ở từng lớp thử.
 - (Không gấp) Lớp trưởng ẩn thư không phù hợp ngay trên điện thoại (hiện chỉ quản trị làm được).
