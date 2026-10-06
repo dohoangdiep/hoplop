@@ -67,6 +67,7 @@ export const LOP_MAU: Lop = {
   nienKhoaBatDau: 2003,
   nienKhoaKetThuc: 2006,
   giaoDien: 'hoai-niem',
+  cap: 'thpt',
   thanhVien,
   soDo: { soDay: 5, soBanMoiDay: 3, choMoiBan: 2, choNgoi },
   chuong: [

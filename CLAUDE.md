@@ -9,11 +9,11 @@ Tài liệu này là bản đặc tả cho Claude Code. Đọc hết trước kh
 Không phải công cụ tổ chức họp lớp: xác nhận tham dự và thu tiền vẫn diễn ra trên nhóm Zalo. Sản phẩm tập trung vào **giữ kỷ niệm**:
 
 - Sơ đồ chỗ ngồi: chạm vào một bạn để xem ảnh ngày ấy – bây giờ, biệt danh, câu lưu bút
-- Kho ảnh xưa: cả lớp cùng góp, chia theo Lớp 10/11/12, Cắm trại, Bế giảng…
+- Kho ảnh xưa: cả lớp cùng góp, chia theo từng năm học (theo cấp học của lớp), Cắm trại, Bế giảng…
 - Dòng thời gian các lần họp lớp (mỗi lần là một chương, có album, ảnh tập thể, video)
 - "Năm nay – năm ngoái": ảnh tập thể các năm đặt cạnh nhau
 - "Tái hiện": ảnh xưa và ảnh chụp lại cùng tư thế
-- Hộp thư thời gian: thư hẹn mở vào một lần họp sau
+- Hộp thư thời gian: thư hẹn mở vào một lần họp sau (**tạm tắt từ 06/10**, công tắc `BAT_HOP_THU` trong `src/data/tinhNang.ts`; code và dữ liệu giữ nguyên)
 - Góc thầy cô
 - Gửi ảnh cho lớp bất cứ lúc nào: ảnh thời đi học hoặc ảnh một lần họp lớp (kể cả buổi đã qua)
 - QR tại buổi họp: lối tắt vào trang gửi ảnh, chọn sẵn buổi họp đó, không cần cài app hay đăng nhập
@@ -68,7 +68,7 @@ Với mô hình làm hộ, chủ dịch vụ dựng phần nặng (thành viên,
 | Vào | Trang chủ gõ mã lớp, hoặc bấm link/QR. Không tài khoản | **SĐT + mã PIN 6 số** ở `/lop-truong` (không cần mã lớp; SĐT là lớp trưởng của 2 lớp thì cho chọn). Nhập một lần, máy nhớ | Email OTP ở `/quan-tri`, cờ trong bảng `quan_tri_he_thong` |
 | Xem trang lớp | Có | Có | Mọi lớp |
 | Gửi ảnh (chọn "chụp hồi nào") | Có, **vào hàng chờ duyệt** | Có, hiện ngay | Có, hiện ngay |
-| Duyệt / ẩn ảnh, xếp mục hoặc buổi | | Có | Có |
+| Duyệt / ẩn / xóa hẳn ảnh, xếp mục hoặc buổi | | Có | Có |
 | Tạo buổi họp, lấy QR | | Có | Có |
 | Tái hiện, Góc thầy cô (thêm/sửa/xóa) | | Có | Có |
 | Thành viên, sơ đồ, giao diện, gia hạn, tài khoản lớp trưởng | | | Có |
@@ -95,7 +95,7 @@ so_do          lop_id, so_day, so_ban_moi_day, cho_moi_ban, bang_den_o ('tren' |
 cho_ngoi       lop_id, day, ban, vi_tri, thanh_vien_id
 chuong         id, lop_id, ma_qr (unique), tieu_de, ngay, dia_diem, mo_ta, anh_tap_the_id, video_url,
                qr_hieu_luc_tu, qr_hieu_luc_den, thu_tu
-anh            id, lop_id, loai ('xua' | 'chuong'), chuong_id (null nếu ảnh xưa), muc ('lop-10' | 'lop-11' | 'lop-12' | 'cam-trai' | 'be-giang' | 'khac'),
+anh            id, lop_id, loai ('xua' | 'chuong'), chuong_id (null nếu ảnh xưa), muc (theo cấp: 'lop-1'…'lop-12' | 'nam-1'…'nam-4'; + 'cam-trai' | 'be-giang' | 'khac'; 'chan-dung' = ảnh riêng; null = chưa rõ),
                nam_hoc, chu_thich, nguoi_gui_ten, trang_thai ('cho-duyet' | 'da-duyet' | 'an'),
                duong_dan_goc, duong_dan_xem, rong, cao, dung_luong, tao_luc
 anh_nguoi      anh_id, thanh_vien_id                -- gắn tên người trong ảnh
@@ -104,7 +104,7 @@ thu_hen_gio    id, lop_id, nguoi_viet, noi_dung, mo_vao_chuong_id hoặc mo_vao_
 thay_co        id, lop_id, ho_ten, vai_tro, mon, cau_noi, anh_id
 ten_mien       hostname (unique), lop_id, het_han
 lop_truong     id, lop_id, ho_ten, sdt (chuẩn hóa dạng 0xxxxxxxxx), pin_hash, tao_luc   -- tối đa 2 mỗi lớp
-lop (thêm)     luon_can_mat_khau (bool, mặc định false)
+lop (thêm)     luon_can_mat_khau (bool, mặc định false), cap ('tieu-hoc' Lớp 1–5 | 'thcs' Lớp 6–9 | 'thpt' Lớp 10–12, mặc định | 'dai-hoc' Năm 1–4)
 ```
 
 Bật RLS cho mọi bảng. Viết migration SQL trong `supabase/migrations/`.
@@ -116,7 +116,7 @@ Bật RLS cho mọi bảng. Viết migration SQL trong `supabase/migrations/`.
   - bản gốc: giữ nguyên, chỉ tải khi người dùng bấm "Tải ảnh gốc" hoặc xuất zip
 - Bucket **riêng tư**. Hiển thị qua signed URL có hạn.
 - Ảnh thành viên gửi (kể cả qua QR) luôn ở trạng thái `cho-duyet`; chỉ `da-duyet` mới hiện. Ảnh lớp trưởng và chủ dịch vụ gửi được duyệt sẵn.
-- Một trang gửi ảnh chung: chọn ảnh → "Ảnh này chụp hồi nào?" (Thời đi học: Lớp 10/11/12, Cắm trại, Bế giảng, Khác · Các lần họp lớp: danh sách chương · Không nhớ rõ) → tên bạn → gửi. QR buổi họp chỉ chọn sẵn buổi đó; QR không cần hết hạn.
+- Một trang gửi ảnh chung: chọn ảnh → "Ảnh này chụp hồi nào?" (Thời đi học: các năm theo cấp học của lớp, Cắm trại, Bế giảng, Khác · Các lần họp lớp: danh sách chương · Không nhớ rõ) → tên bạn → gửi. QR buổi họp chỉ chọn sẵn buổi đó; QR không cần hết hạn.
 - Người gửi thấy ảnh của mình đang chờ duyệt (lưu id ảnh trong localStorage) để không gửi lại.
 - Giới hạn: tối đa ~20 ảnh mỗi lần gửi, ~20MB mỗi ảnh; video giới hạn riêng.
 - Tải lên phải chịu được mạng 4G yếu ở nhà hàng: tải từng ảnh, có tiến độ, thử lại khi lỗi.

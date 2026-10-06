@@ -4,7 +4,7 @@ import {
   dsThem, datAnhRieng, luuTaiHienLT, xoaTaiHienLT, luuThayCoLT, xoaThayCoLT, tokenLopTruong, HetPhien,
   type DuLieuLT, type TaiHienLT, type ThayCoLT,
 } from '../lib/lopTruong'
-import { guiAnh, TEN_MUC } from '../lib/guiAnh'
+import { guiAnh, tenMuc } from '../lib/guiAnh'
 import { linkXemNhieu } from '../lib/storage'
 
 type Lam = (viec: () => Promise<unknown>, thongBao?: string) => Promise<boolean>
@@ -60,7 +60,7 @@ function OAnh({ nhan, anhId, xemTruoc, dl, url, onDoi, onHetPhien }: {
                   <button type="button" className="lt-o-anh khung-anh xua" onClick={() => { onDoi(a.id, url[a.xem]); setMo(false) }}
                     aria-label={`Chọn ảnh${a.chu_thich ? ': ' + a.chu_thich : ''}`}>
                     {url[a.xem] ? <img src={url[a.xem]} alt="" loading="lazy" /> : <span className="lt-khong-anh">Ảnh</span>}
-                    <small>{a.loai === 'chuong' ? tenChuong.get(a.chuong_id ?? '') ?? 'Buổi họp' : a.muc ? TEN_MUC[a.muc] ?? 'Khác' : 'Chưa rõ'}</small>
+                    <small>{a.loai === 'chuong' ? tenChuong.get(a.chuong_id ?? '') ?? 'Buổi họp' : tenMuc(a.muc, dl.lop.cap)}</small>
                   </button>
                 </li>
               ))}

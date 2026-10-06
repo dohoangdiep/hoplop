@@ -2,15 +2,35 @@ import imageCompression from 'browser-image-compression'
 import { supabase } from './supabase'
 import { taiLen } from './storage'
 
-export const MUC_ANH: { ma: string; ten: string }[] = [
-  { ma: 'lop-10', ten: 'Lớp 10' },
-  { ma: 'lop-11', ten: 'Lớp 11' },
-  { ma: 'lop-12', ten: 'Lớp 12' },
-  { ma: 'cam-trai', ten: 'Cắm trại' },
-  { ma: 'be-giang', ten: 'Bế giảng' },
-  { ma: 'khac', ten: 'Khác' },
+/** Cấp học của lớp: quyết định các mục ảnh xưa (Lớp 1–5, 6–9, 10–12 hay Năm nhất–Năm tư) */
+export type CapHoc = 'tieu-hoc' | 'thcs' | 'thpt' | 'dai-hoc'
+export const CAP_HOC: { ma: CapHoc; ten: string; moTa: string }[] = [
+  { ma: 'tieu-hoc', ten: 'Tiểu học', moTa: 'Lớp 1 – 5' },
+  { ma: 'thcs', ten: 'THCS', moTa: 'Lớp 6 – 9' },
+  { ma: 'thpt', ten: 'THPT', moTa: 'Lớp 10 – 12' },
+  { ma: 'dai-hoc', ten: 'Đại học, cao đẳng', moTa: 'Năm nhất – năm tư' },
 ]
-export const TEN_MUC: Record<string, string> = Object.fromEntries(MUC_ANH.map((m) => [m.ma, m.ten]))
+
+const NAM = ['', 'Năm nhất', 'Năm hai', 'Năm ba', 'Năm tư', 'Năm năm', 'Năm sáu']
+
+/** Tên hiển thị của một mục ảnh */
+export function tenMuc(ma: string | null | undefined, cap?: CapHoc | null): string {
+  if (!ma) return 'Chưa rõ'
+  const lop = /^lop-(\d{1,2})$/.exec(ma)
+  if (lop) return `Lớp ${lop[1]}`
+  const nam = /^nam-(\d)$/.exec(ma)
+  if (nam) return NAM[Number(nam[1])] ?? `Năm ${nam[1]}`
+  return ({ 'cam-trai': 'Cắm trại', 'be-giang': cap === 'dai-hoc' ? 'Lễ tốt nghiệp' : 'Bế giảng', khac: 'Khác', 'chan-dung': 'Ảnh riêng' } as Record<string, string>)[ma] ?? 'Khác'
+}
+
+/** Các mục ảnh xưa của một cấp học, theo thứ tự hiện trên trang (khớp hàm muc_cua_cap phía máy chủ) */
+export function mucAnh(cap?: CapHoc | null): { ma: string; ten: string }[] {
+  const lop = cap === 'tieu-hoc' ? ['lop-1', 'lop-2', 'lop-3', 'lop-4', 'lop-5']
+    : cap === 'thcs' ? ['lop-6', 'lop-7', 'lop-8', 'lop-9']
+      : cap === 'dai-hoc' ? ['nam-1', 'nam-2', 'nam-3', 'nam-4']
+        : ['lop-10', 'lop-11', 'lop-12']
+  return [...lop, 'cam-trai', 'be-giang', 'khac'].map((ma) => ({ ma, ten: tenMuc(ma, cap) }))
+}
 
 /**
  * "Ảnh này thuộc đâu": một mục ảnh xưa, một buổi họp, hoặc chưa rõ.

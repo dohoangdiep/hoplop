@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { guiAnh } from './guiAnh'
+import { guiAnh, mucAnh } from './guiAnh'
 import { veCanh, veChanDung, taoRng, type KieuCanh } from './veAnhDemo'
 import {
   dsThanhVien, themThanhVien, phanTichDanhSach, laySoDo, luuSoDo, khoaCho,
@@ -84,6 +84,10 @@ export async function napDemo(lop: LopQuanTri, bao: (text: string) => void): Pro
   const coAnh = new Map((daCoAnh ?? []).map((t) => [t.id, t]))
   const { count: soChuong } = await supabase.from('chuong').select('id', { count: 'exact', head: true }).eq('lop_id', lop.id)
 
+  // Kế hoạch viết theo THPT (lớp 10–12): lớp cấp khác thì dùng 3 năm cuối của cấp đó
+  const namCuoi = mucAnh(lop.cap).filter((m) => /^(lop|nam)-/.test(m.ma)).slice(-3).map((m) => m.ma)
+  const doiMuc = (m: string) => ({ 'lop-10': namCuoi[0], 'lop-11': namCuoi[1], 'lop-12': namCuoi[2] } as Record<string, string>)[m] ?? m
+
   // 2. Kho ảnh xưa + ảnh bìa
   const ke = (soCanhDaCo ?? 0) >= 14 ? [] : keHoachAnhXua(nam)
   let anhBia: string | undefined
@@ -91,7 +95,7 @@ export async function napDemo(lop: LopQuanTri, bao: (text: string) => void): Pro
     bao(`Đang vẽ và tải ảnh xưa ${i + 1}/${ke.length}…`)
     const k = ke[i]
     const file = await veCanh(k.kieu, seedLop + i * 101, lop.ten_lop, nam, k.nhan)
-    const id = await gui1(file, { muc: k.muc, chuThich: `${k.chuThich} (ảnh minh họa)` })
+    const id = await gui1(file, { muc: doiMuc(k.muc), chuThich: `${k.chuThich} (ảnh minh họa)` })
     if (k.kieu === 'tap-the' && k.muc === 'be-giang') anhBia = id
   }
   if (anhBia) await datAnhBia(lop.id, anhBia)

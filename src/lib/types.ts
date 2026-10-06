@@ -1,4 +1,5 @@
 import type { MaGiaoDien } from '../themes'
+import type { CapHoc } from './guiAnh'
 
 export interface ThanhVien {
   id: string
@@ -48,6 +49,8 @@ export interface Lop {
   nienKhoaBatDau: number
   nienKhoaKetThuc: number
   giaoDien: MaGiaoDien
+  /** Cấp học: quyết định các mục ảnh xưa */
+  cap?: CapHoc
   anhBiaUrl?: string | null
   thanhVien: ThanhVien[]
   soDo: { soDay: number; soBanMoiDay: number; choMoiBan: number; choNgoi: ChoNgoi[] }

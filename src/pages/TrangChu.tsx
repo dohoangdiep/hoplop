@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { MA_LOP_MAU } from '../data/lopMau'
 import { laMaLopHopLe, laTenGoiHopLe } from '../lib/maLop'
 import { DANH_SACH_GIAO_DIEN, GIAO_DIEN } from '../themes'
+import { BAT_HOP_THU } from '../data/tinhNang'
 import {
   LIEN_HE, zaloLink, TINH_NANG, ZALO_SO_VOI_TRANG, BUOC, GOI, CAM_NHAN, HOI_DAP, BAN_MINH_HOA,
   type MaTinhNang,
@@ -195,7 +196,7 @@ export default function TrangChu() {
           <div className="tc-hero-chu">
             <span className="tc-chu-tay">Trang kỷ niệm cho lớp mình</span>
             <h1>Giữ lại thanh xuân của lớp mình. Mỗi lần họp lớp, thêm một chương.</h1>
-            <p>Sơ đồ chỗ ngồi ngày ấy, kho ảnh xưa cả lớp cùng góp, ảnh từng lần gặp lại và những lá thư hẹn mở năm sau. Tất cả trên một trang riêng, chỉ lớp mình xem được.</p>
+            <p>Sơ đồ chỗ ngồi ngày ấy, kho ảnh xưa cả lớp cùng góp, ảnh từng lần gặp lại{BAT_HOP_THU ? ' và những lá thư hẹn mở năm sau' : ', ảnh chụp lại cùng tư thế năm xưa'}. Tất cả trên một trang riêng, chỉ lớp mình xem được.</p>
             <div className="tc-hang-nut">
               <Link className="tc-nut do" to={`/${MA_LOP_MAU}`}>Xem lớp mẫu <IconMuiTen /></Link>
               <NutZalo className="tc-nut vien" chu="Nhắn Zalo đặt trang" />

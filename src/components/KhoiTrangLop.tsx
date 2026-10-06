@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { Lop } from '../lib/types'
 import type { KieuBia } from '../themes'
+import { BAT_HOP_THU } from '../data/tinhNang'
 
 const IconAnh = () => (
   <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -105,7 +106,9 @@ export function SapHopLop({ lop }: { lop: Lop }) {
       {sap.diaDiem && <div style={{ fontSize: 13, color: 'var(--mau-on-primary-muted)' }}>{sap.diaDiem}</div>}
       <div className="nut-hang">
         <a className="nut trang" href={`/${lop.ma}/gui-anh`}>Gửi ảnh cho lớp</a>
-        <a className="nut vien" href="#thu">Viết thư cho lớp</a>
+        {BAT_HOP_THU
+          ? <a className="nut vien" href="#thu">Viết thư cho lớp</a>
+          : <a className="nut vien" href={`/${lop.ma}/gui-anh?buoi=${sap.id}`}>Gửi ảnh buổi này</a>}
       </div>
     </section>
   )

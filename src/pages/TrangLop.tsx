@@ -7,6 +7,7 @@ import { bienCss, layGiaoDien, napFont, DANH_SACH_GIAO_DIEN, GIAO_DIEN, type MaG
 import { Bia, SapHopLop, SoDoChoNgoi, KhoAnhXua, DongThoiGian, NamNayNamNgoai } from '../components/KhoiTrangLop'
 import { MA_LOP_MAU, TAI_HIEN_MAU, THAY_CO_MAU } from '../data/lopMau'
 import { HopThu } from '../components/HopThu'
+import { BAT_HOP_THU } from '../data/tinhNang'
 import { supabase } from '../lib/supabase'
 import '../styles/lop.css'
 
@@ -151,7 +152,7 @@ export default function TrangLop() {
           <DongThoiGian lop={lop} />
           <NamNayNamNgoai lop={lop} />
           <TaiHien ds={them.taiHien} />
-          <HopThu lop={lop} khoa={ma} laLopMau={laLopMau} />
+          {BAT_HOP_THU && <HopThu lop={lop} khoa={ma} laLopMau={laLopMau} />}
           <GocThayCo ds={them.thayCo} />
         </>
       )}

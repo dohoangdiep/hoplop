@@ -4,6 +4,7 @@
  */
 import { supabase } from './supabase'
 import type { MaGiaoDien } from '../themes'
+import type { CapHoc } from './guiAnh'
 
 export interface LopCuaToi {
   id: string
@@ -93,7 +94,7 @@ export interface ChuongLT {
   so_anh: number
 }
 export interface DuLieuLT {
-  lop: { id: string; ma: string; ten_lop: string; truong: string; giao_dien: MaGiaoDien; trang_thai: string;
+  lop: { id: string; ma: string; ten_lop: string; truong: string; giao_dien: MaGiaoDien; trang_thai: string; cap?: CapHoc;
          nien_khoa_bat_dau: number | null; nien_khoa_ket_thuc: number | null }
   ho_ten: string
   chuong: ChuongLT[]
@@ -124,6 +125,7 @@ async function goi<T = any>(ham: string, thamSo: Record<string, unknown>): Promi
       'ho-ten': 'Bạn nhập họ tên thầy cô nhé.',
       dai: 'Câu nói dài quá, bạn viết gọn lại nhé.',
       'khong-tim-thay': 'Không tìm thấy mục này, bạn tải lại trang nhé.',
+      'so-anh': 'Mỗi lần xóa tối đa 200 ảnh.',
     }
     throw new Error(tb[data.loi] ?? 'Có lỗi, bạn thử lại nhé.')
   }
@@ -183,3 +185,6 @@ export const luuThayCoLT = (lopId: string, id: string | null, c: { hoTen: string
     p_lop: lopId, p_id: id, p_ho_ten: c.hoTen, p_vai_tro: c.vaiTro, p_mon: c.mon, p_cau_noi: c.cauNoi, p_anh_id: c.anhId,
   })
 export const xoaThayCoLT = (lopId: string, id: string) => goi('lt_xoa_thay_co', { p_lop: lopId, p_id: id })
+
+/** Xóa hẳn ảnh (không lấy lại được). File trên kho được trang quản trị dọn sau. */
+export const xoaAnhLT = (lopId: string, ids: string[]) => goi<{ so_anh: number }>('lt_xoa_anh', { p_lop: lopId, p_ids: ids })

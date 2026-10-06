@@ -6,7 +6,7 @@ import {
   dsThayCoQT, luuThayCo, xoaThayCo, type ThayCoQT,
 } from '../lib/quanTri'
 import { linkXemNhieu } from '../lib/storage'
-import { TEN_MUC } from '../lib/guiAnh'
+import { tenMuc } from '../lib/guiAnh'
 
 /* ---------------- Chọn ảnh: từ kho của lớp hoặc tải lên ---------------- */
 function ChonTrongKho({ lopId, onChon, onDong }: { lopId: string; onChon: (id: string) => void; onDong: () => void }) {
@@ -36,7 +36,7 @@ function ChonTrongKho({ lopId, onChon, onDong }: { lopId: string; onChon: (id: s
             <button key={a.id} type="button" className="qt-o-anh" onClick={() => onChon(a.id)}
               aria-label={`Chọn ảnh${a.chu_thich ? ': ' + a.chu_thich : ''}`}>
               {url[a.duong_dan_xem] ? <img src={url[a.duong_dan_xem]} alt="" loading="lazy" /> : <span>…</span>}
-              <small>{a.trang_thai === 'cho-duyet' ? 'Chờ duyệt' : a.loai === 'xua' ? (a.muc ? TEN_MUC[a.muc] ?? 'Riêng' : 'Chưa rõ') : 'Buổi họp'}</small>
+              <small>{a.trang_thai === 'cho-duyet' ? 'Chờ duyệt' : a.loai === 'xua' ? tenMuc(a.muc) : 'Buổi họp'}</small>
             </button>
           ))}
         </div>

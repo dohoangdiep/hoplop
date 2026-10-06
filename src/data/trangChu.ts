@@ -13,16 +13,19 @@ export const LIEN_HE = {
 
 export const zaloLink = () => (LIEN_HE.zalo ? `https://zalo.me/${LIEN_HE.zalo.replace(/\D/g, '')}` : '')
 
+import { BAT_HOP_THU } from './tinhNang'
+
 export type MaTinhNang = 'so-do' | 'kho-anh' | 'gap-lai' | 'nam-nay' | 'hop-thu' | 'qr'
 
-export const TINH_NANG: { ma: MaTinhNang; tieuDe: string; moTa: string; sapCo?: boolean }[] = [
+const TAT_CA_TINH_NANG: { ma: MaTinhNang; tieuDe: string; moTa: string; sapCo?: boolean }[] = [
   { ma: 'so-do', tieuDe: 'Sơ đồ chỗ ngồi', moTa: 'Chạm vào chỗ ngồi của từng bạn để xem ảnh ngày ấy, bây giờ, biệt danh và câu lưu bút.' },
-  { ma: 'kho-anh', tieuDe: 'Kho ảnh xưa', moTa: 'Cả lớp cùng góp ảnh cũ, xếp theo lớp 10, 11, 12, cắm trại, bế giảng. Mỗi năm lại tìm thêm được ảnh mới.' },
+  { ma: 'kho-anh', tieuDe: 'Kho ảnh xưa', moTa: 'Cả lớp cùng góp ảnh cũ, xếp theo từng năm học, cắm trại, bế giảng. Mỗi năm lại tìm thêm được ảnh mới.' },
   { ma: 'gap-lai', tieuDe: 'Những lần gặp lại', moTa: 'Mỗi buổi họp lớp là một chương: ảnh tập thể, album, video ngắn của năm đó.' },
   { ma: 'nam-nay', tieuDe: 'Năm nay – năm ngoái', moTa: 'Ảnh tập thể các năm đặt cạnh nhau để thấy cả lớp đã thay đổi thế nào.' },
   { ma: 'qr', tieuDe: 'QR gửi ảnh tại buổi họp', moTa: 'Đặt một mã QR trên bàn tiệc. Ai chụp gì cũng gửi thẳng vào album của năm đó, không cần cài app.' },
   { ma: 'hop-thu', tieuDe: 'Hộp thư thời gian', moTa: 'Viết thư cho cả lớp, hẹn đến lần họp 25 hay 30 năm mới mở.' },
 ]
+export const TINH_NANG = TAT_CA_TINH_NANG.filter((t) => BAT_HOP_THU || t.ma !== 'hop-thu')
 
 export const ZALO_SO_VOI_TRANG = {
   zalo: ['Ảnh bị nén mờ', 'Trôi mất sau vài trăm tin nhắn', 'Ảnh hết hạn, không tải lại được', 'Mỗi người giữ một ít, không ai đủ'],
@@ -45,7 +48,7 @@ export const GOI = {
   giaHan: {
     gia: '500.000đ',
     ghiChu: 'Gia hạn đúng dịp họp lớp',
-    gom: ['Chương mới cho buổi họp năm đó', 'QR gửi ảnh mới, lọc ảnh hộ', 'Video tổng hợp ngắn của năm', 'Mở các thư hẹn giờ đến hạn', 'Trả trước 3 năm: 1.200.000đ'],
+    gom: ['Chương mới cho buổi họp năm đó', 'QR gửi ảnh mới, lọc ảnh hộ', 'Video tổng hợp ngắn của năm', ...(BAT_HOP_THU ? ['Mở các thư hẹn giờ đến hạn'] : []), 'Trả trước 3 năm: 1.200.000đ'],
   },
   them: [
     ['Tên miền riêng cho lớp', 'từ 500.000đ'],

@@ -97,3 +97,4 @@
 .lt-anh-thay-co img { width: 100%; height: 100%; object-fit: cover; }
 /* Nút "Tải ảnh mới" là <label>: giữ dáng nút kể cả khi nằm trong form */
 .lt .lt-form label.nut { display: flex; align-items: center; justify-content: center; margin-top: 0; font-weight: 600; font-size: 13px; }
+.lt .lt-nguy-chu { color: var(--mau-accent); align-self: flex-start; }

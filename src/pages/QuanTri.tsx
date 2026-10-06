@@ -5,10 +5,12 @@ import QRCode from 'qrcode'
 import { supabase } from '../lib/supabase'
 import {
   laQuanTriHeThong, danhSachLop, layLop, taoLop, datMatKhau, taoMatKhauLop, capNhatLop, locLop, datTenGoi,
-  themLopTruong, taoPinMoi, xoaLopTruong, tinNhanLopTruong, linkZalo,
+  donFileChoXoa, themLopTruong, taoPinMoi, xoaLopTruong, tinNhanLopTruong, linkZalo,
   type LopQuanTri, type LopDanhSach, type LopTruongQT, type KetQuaThemLT,
 } from '../lib/quanTri'
 import { hienSdt } from '../lib/lopTruong'
+import { CAP_HOC, type CapHoc } from '../lib/guiAnh'
+import { BAT_HOP_THU } from '../data/tinhNang'
 import { DANH_SACH_GIAO_DIEN, GIAO_DIEN, type MaGiaoDien } from '../themes'
 import { QuanLyThanhVien, SuaSoDo, QuanLyAnh, QuanLyChuong, QuanLyThu, NutNapDemo, NutXoaDemo, BAT_DEMO } from './QuanTriLop'
 import type { ThanhVienQT, ChuongQT } from '../lib/quanTri'
@@ -112,7 +114,10 @@ function DanhSach() {
   const [ds, setDs] = useState<LopDanhSach[] | null>(null)
   const [loi, setLoi] = useState('')
   const [tim, setTim] = useState('')
-  useEffect(() => { danhSachLop().then(setDs).catch((e) => setLoi(e.message)) }, [])
+  useEffect(() => {
+    danhSachLop().then(setDs).catch((e) => setLoi(e.message))
+    donFileChoXoa().catch(() => { /* lần sau dọn tiếp */ })
+  }, [])
   const loc = ds ? locLop(ds, tim) : []
   const tongCho = ds?.reduce((n, l) => n + l.so_cho_duyet, 0) ?? 0
   return (
@@ -284,6 +289,21 @@ function QuanLyLopTruong({ lop }: { lop: LopQuanTri }) {
   )
 }
 
+/* ---------------- Cấp học ---------------- */
+function ChonCapHoc({ value, onChange }: { value: CapHoc; onChange: (v: CapHoc) => void }) {
+  return (
+    <fieldset className="qt-chon-gd">
+      <legend>Cấp học (các mục ảnh xưa hiện theo cấp)</legend>
+      {CAP_HOC.map((c) => (
+        <label key={c.ma} className={value === c.ma ? 'chon' : ''}>
+          <input type="radio" name="cap-hoc" value={c.ma} checked={value === c.ma} onChange={() => onChange(c.ma)} />
+          <span><b>{c.ten}</b><small>{c.moTa}</small></span>
+        </label>
+      ))}
+    </fieldset>
+  )
+}
+
 /* ---------------- Tạo lớp ---------------- */
 function ChonGiaoDien({ value, onChange }: { value: MaGiaoDien; onChange: (v: MaGiaoDien) => void }) {
   return (
@@ -308,6 +328,7 @@ function TaoLop() {
   const [bd, setBd] = useState('')
   const [kt, setKt] = useState('')
   const [gd, setGd] = useState<MaGiaoDien>('hoai-niem')
+  const [cap, setCap] = useState<CapHoc>('thpt')
   const [dang, setDang] = useState(false)
   const [loi, setLoi] = useState('')
   const [lt, setLt] = useState([{ hoTen: '', sdt: '' }, { hoTen: '', sdt: '' }])
@@ -322,7 +343,7 @@ function TaoLop() {
     setDang(true)
     try {
       const r = await taoLop({
-        tenLop, truong, tinh, giaoDien: gd,
+        tenLop, truong, tinh, giaoDien: gd, cap,
         nienKhoaBatDau: bd ? Number(bd) : null,
         nienKhoaKetThuc: kt ? Number(kt) : null,
       })
@@ -383,6 +404,7 @@ function TaoLop() {
           <div><label htmlFor="bd">Năm vào trường</label><input id="bd" inputMode="numeric" placeholder="2003" value={bd} onChange={(e) => setBd(e.target.value.replace(/\D/g, ''))} /></div>
           <div><label htmlFor="kt">Năm ra trường</label><input id="kt" inputMode="numeric" placeholder="2006" value={kt} onChange={(e) => setKt(e.target.value.replace(/\D/g, ''))} /></div>
         </div>
+        <ChonCapHoc value={cap} onChange={setCap} />
         <ChonGiaoDien value={gd} onChange={setGd} />
         <fieldset className="qt-fieldset">
           <legend>Lớp trưởng (tối đa 2, có thể thêm sau)</legend>
@@ -447,6 +469,7 @@ function ChiTietLop() {
         {Object.entries(TRANG_THAI).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
       </select>
 
+      <ChonCapHoc value={lop.cap ?? 'thpt'} onChange={async (c) => { await capNhatLop(lop.id, { cap: c }); setLop({ ...lop, cap: c }); setThongBao('Đã đổi cấp học. Ảnh cũ thuộc mục không còn trong cấp mới vẫn hiện, xếp lại được ở mục Ảnh.') }} />
       <ChonGiaoDien value={lop.giao_dien} onChange={doiGiaoDien} />
 
       <QuanLyLopTruong lop={lop} />
@@ -476,9 +499,9 @@ function ChiTietLop() {
       <QuanLyThanhVien lopId={lop.id} lopMa={lop.ma} onDoi={setThanhVien} />
       <SuaSoDo lopId={lop.id} thanhVien={thanhVien} />
       <QuanLyChuong lopId={lop.id} maLop={lop.ma} tenLop={lop.ten_lop} truong={lop.truong} onDoi={setChuong} />
-      <QuanLyAnh lopId={lop.id} maLop={lop.ma} thanhVien={thanhVien} chuong={chuong} />
+      <QuanLyAnh lopId={lop.id} maLop={lop.ma} thanhVien={thanhVien} chuong={chuong} cap={lop.cap} />
       <QuanLyTaiHien lopId={lop.id} lopMa={lop.ma} />
-      <QuanLyThu lopId={lop.id} chuong={chuong} />
+      {BAT_HOP_THU && <QuanLyThu lopId={lop.id} chuong={chuong} />}
       <QuanLyThayCo lopId={lop.id} lopMa={lop.ma} />
 
       <section className="qt-muc">

@@ -38,7 +38,8 @@
 | `0006_lop_truong_gui_anh_chung.sql` | Đợt 1b: lớp trưởng (SĐT + PIN), vào lớp bằng mã, trang gửi ảnh chung, công tắc "Luôn cần mật khẩu" | Đã chạy (06/10) |
 | `0007_hop_thu_ten_goi.sql` | Hộp thư thời gian (`thu_cua_lop`, `viet_thu`), đổi tên gọi (`qt_dat_ten_goi`, bảng `ten_goi_cu`, `dia_chi_moi`) | Chạy chưa? (chủ dự án xác nhận) |
 | `0008_tai_hien_thay_co.sql` | Tái hiện + Góc thầy cô: thêm cột năm/thứ tự, hàm `xem_lop_them` cho trang lớp | Chạy chưa? (chủ dự án xác nhận) |
-| `0009_lop_truong_tai_hien_thay_co.sql` | Lớp trưởng/lớp phó tự làm Tái hiện, Góc thầy cô: `lt_ds_them`, `lt_luu_tai_hien`, `lt_xoa_tai_hien`, `lt_luu_thay_co`, `lt_xoa_thay_co`, `lt_dat_anh_rieng` | **Chưa chạy** |
+| `0009_lop_truong_tai_hien_thay_co.sql` | Lớp trưởng/lớp phó tự làm Tái hiện, Góc thầy cô: `lt_ds_them`, `lt_luu_tai_hien`, `lt_xoa_tai_hien`, `lt_luu_thay_co`, `lt_xoa_thay_co`, `lt_dat_anh_rieng` | Chạy chưa? (chủ dự án xác nhận) |
+| `0010_cap_hoc_xoa_anh.sql` | Cấp học của lớp (`lop.cap`, `muc_cua_cap`; định nghĩa lại `xem_lop`, `thong_tin_gui_anh`, `tao_luot_gui`, `lt_du_lieu`, `lt_xep_anh`, `qt_ds_lop` để biết cấp); lớp trưởng xóa hẳn ảnh (`lt_xoa_anh`, hàng đợi `file_cho_xoa`) | **Chưa chạy.** Chạy lại nhiều lần không sao |
 
 Quản trị hệ thống: user của chủ dự án đã được thêm vào bảng `quan_tri_he_thong`.
 
@@ -135,11 +136,18 @@ Theo `CLAUDE.md` mục 5 và 7. **Cần chạy `0006_lop_truong_gui_anh_chung.sq
 - Mọi hàm `lt_*` mới kiểm token phiên và chỉ nhận ảnh thuộc chính lớp đó. Quản trị vẫn làm được như trước.
 - Bộ thử đầu-cuối: 39/39 bước đạt (thêm luồng lớp trưởng: chọn 1 ảnh của lớp + tải 1 ảnh mới thành cặp Tái hiện, thêm thầy cô có ảnh, kiểm tra trên trang lớp).
 
+## 5e. Góp ý của chủ dự án (06/10, khuya)
+
+- **Lớp trưởng xóa hẳn ảnh**: trong ô xem ảnh có "Xóa hẳn ảnh này" (hỏi xác nhận; khác với "Ẩn"); tab "Đã ẩn" có "Xóa hẳn tất cả N ảnh đã ẩn". Ảnh đang làm ảnh bìa, ảnh ngày ấy/bây giờ, ảnh tập thể, ảnh thầy cô thì được gỡ ra; cặp Tái hiện dùng ảnh đó bị xóa. Lớp trưởng không có quyền xóa file trên kho nên đường dẫn file vào bảng `file_cho_xoa`; **trang quản trị tự dọn mỗi lần mở danh sách lớp**.
+- **Hộp thư thời gian tạm tắt** (chủ dự án: viết xong để lâu dễ quên). Công tắc `BAT_HOP_THU` trong `src/data/tinhNang.ts`: ẩn khỏi trang lớp, trang chủ (danh sách tính năng, câu giới thiệu, quyền lợi gia hạn) và quản trị. Nút "Viết thư cho lớp" ở ô Sắp họp lớp đổi thành "Gửi ảnh buổi này". Code, SQL 0007 và thư đã viết giữ nguyên; bật lại = đổi `false` thành `true`.
+- **Cấp học**: tạo lớp chọn Tiểu học / THCS / THPT / Đại học, cao đẳng (sửa được ở trang lớp trong quản trị). Mục ảnh xưa hiện theo cấp ở mọi nơi: trang gửi ảnh, kho ảnh xưa trên trang lớp, ô xếp ảnh của lớp trưởng và quản trị. Lớp cũ mặc định THPT. Đại học: "Bế giảng" hiện thành "Lễ tốt nghiệp". Đổi cấp sau khi đã có ảnh: ảnh ở mục cũ vẫn hiện, xếp lại được. Máy chủ kiểm mục theo cấp (`muc_cua_cap`): gửi mục không thuộc cấp thì vào "Khác".
+- Bộ thử đầu-cuối: 38/38 bước đạt (thêm: thư đã ẩn, lớp trưởng xóa hẳn ảnh, mục theo cấp tiểu học và đại học).
+
 ## 6. Việc tiếp theo
 
 **Còn lại của Đợt 1:**
 - Chạy `0006` và thử theo các bước trên; gửi ảnh chụp màn hình nếu có chỗ lạ.
-- Chạy `0007`, `0008` (nếu chưa) và `0009`; thử Hộp thư, đổi tên gọi, Tái hiện, Góc thầy cô (cả ở quản trị và trang lớp trưởng).
+- Chạy các file SQL chưa chạy, đến `0010`; thử đổi tên gọi, Tái hiện, Góc thầy cô, cấp học, lớp trưởng xóa ảnh.
 - **Còn thiếu số Zalo** nhận đặt trang (`src/data/trangChu.ts`, mục `zalo`); thêm cảm nhận thật khi có lớp đầu tiên. Trang Chính sách bảo mật / Điều khoản (chưa có, nên chưa đặt link).
 - Tắt `VITE_BAT_DEMO` khi thử xong, rồi bấm "Xóa dữ liệu demo" ở từng lớp thử.
 - (Không gấp) Lớp trưởng ẩn thư không phù hợp ngay trên điện thoại (hiện chỉ quản trị làm được).

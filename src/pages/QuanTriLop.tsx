@@ -9,7 +9,7 @@ import {
 } from '../lib/quanTri'
 import { linkQrChuong, veToQr } from '../lib/toQr'
 import { linkXemNhieu, linkTaiGoc } from '../lib/storage'
-import { MUC_ANH, TEN_MUC, maNoiAnh, giaiNoiAnh, noiCuaAnh } from '../lib/guiAnh'
+import { mucAnh, tenMuc, maNoiAnh, giaiNoiAnh, noiCuaAnh, type CapHoc } from '../lib/guiAnh'
 
 /* ---------------- Thành viên ---------------- */
 export function QuanLyThanhVien({ lopId, lopMa, onDoi }: { lopId: string; lopMa: string; onDoi: (ds: ThanhVienQT[]) => void }) {
@@ -391,7 +391,7 @@ const TAB_ANH: { ma: AnhQT['trang_thai']; ten: string }[] = [
   { ma: 'an', ten: 'Đã ẩn' },
 ]
 
-export function QuanLyAnh({ lopId, maLop, thanhVien, chuong = [] }: { lopId: string; maLop: string; thanhVien: ThanhVienQT[]; chuong?: ChuongQT[] }) {
+export function QuanLyAnh({ lopId, maLop, thanhVien, chuong = [], cap }: { lopId: string; maLop: string; thanhVien: ThanhVienQT[]; chuong?: ChuongQT[]; cap?: CapHoc }) {
   const [thuoc, setThuoc] = useState('tat-ca')
   const [ds, setDs] = useState<AnhQT[] | null>(null)
   const [url, setUrl] = useState<Record<string, string>>({})
@@ -457,7 +457,7 @@ export function QuanLyAnh({ lopId, maLop, thanhVien, chuong = [] }: { lopId: str
             <button key={a.id} type="button" className={`qt-o-anh ${dangMo === a.id ? 'dang-chon' : ''}`} onClick={() => setDangMo(dangMo === a.id ? null : a.id)}
               aria-label={`Ảnh${a.chu_thich ? ': ' + a.chu_thich : ''}${a.nguoi_gui_ten ? ', ' + a.nguoi_gui_ten + ' gửi' : ''}`}>
               {url[a.duong_dan_xem] ? <img src={url[a.duong_dan_xem]} alt="" loading="lazy" /> : <span>…</span>}
-              <small>{a.loai === 'xua' ? (a.muc ? TEN_MUC[a.muc] ?? 'Chân dung' : 'Chưa rõ') : (a.chuong_id && tenChuong.get(a.chuong_id)) || 'Buổi họp'}</small>
+              <small>{a.loai === 'xua' ? tenMuc(a.muc, cap) : (a.chuong_id && tenChuong.get(a.chuong_id)) || 'Buổi họp'}</small>
             </button>
           ))}
         </div>
@@ -491,7 +491,8 @@ export function QuanLyAnh({ lopId, maLop, thanhVien, chuong = [] }: { lopId: str
               <label htmlFor="noi-anh" className="qt-nhan">Ảnh này chụp hồi nào</label>
               <select id="noi-anh" value={maNoiAnh(noiCuaAnh(anhMo))} onChange={(e) => lam(() => xepAnhQT([anhMo.id], giaiNoiAnh(e.target.value)))}>
                 <optgroup label="Thời đi học">
-                  {MUC_ANH.map((m) => <option key={m.ma} value={maNoiAnh({ muc: m.ma })}>{m.ten}</option>)}
+                  {mucAnh(cap).map((m) => <option key={m.ma} value={maNoiAnh({ muc: m.ma })}>{m.ten}</option>)}
+                  {anhMo.muc && !mucAnh(cap).some((m) => m.ma === anhMo.muc) && <option value={maNoiAnh({ muc: anhMo.muc })}>{tenMuc(anhMo.muc, cap)}</option>}
                 </optgroup>
                 {chuong.length > 0 && (
                   <optgroup label="Các lần họp lớp">

@@ -3,7 +3,7 @@ import type { Lop, TaiHien, ThayCo } from './types'
 import type { MaGiaoDien } from '../themes'
 import { LOP_MAU, MA_LOP_MAU } from '../data/lopMau'
 import { linkXemNhieu } from './storage'
-import { MUC_ANH } from './guiAnh'
+import { mucAnh, tenMuc, type CapHoc } from './guiAnh'
 import { tokenLopTruong } from './lopTruong'
 
 export type KetQuaMoLop =
@@ -33,6 +33,7 @@ function chuyenLop(d: any): Lop {
     nienKhoaBatDau: l.nien_khoa_bat_dau ?? 0,
     nienKhoaKetThuc: l.nien_khoa_ket_thuc ?? 0,
     giaoDien: (l.giao_dien ?? 'hoai-niem') as MaGiaoDien,
+    cap: (l.cap ?? 'thpt') as CapHoc,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     thanhVien: (d.thanh_vien ?? []).map((t: any) => ({
       id: t.id,
@@ -111,7 +112,9 @@ async function ganAnh(lop: Lop, d: any): Promise<Lop> {
       anhXuaUrl: tv[i]?.anh_xua ? url[tv[i].anh_xua] : undefined,
       anhNayUrl: tv[i]?.anh_nay ? url[tv[i].anh_nay] : undefined,
     })),
-    khoAnhXua: MUC_ANH
+    // Mục theo cấp học của lớp, cộng thêm mục nào đang có ảnh mà không thuộc cấp (vd lớp đổi cấp sau)
+    khoAnhXua: [...mucAnh(lop.cap), ...[...new Set(xua.map((a) => a.muc ?? 'khac'))]
+      .filter((m) => m !== 'chan-dung' && !mucAnh(lop.cap).some((x) => x.ma === m)).map((ma) => ({ ma, ten: tenMuc(ma, lop.cap) }))]
       .map((m) => ({
         ma: m.ma,
         ten: m.ten,

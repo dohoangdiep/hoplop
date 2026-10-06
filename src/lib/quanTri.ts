@@ -1,8 +1,9 @@
-import { linkXemNhieu } from './storage'
+import { linkXemNhieu, xoaNhieu } from './storage'
 import { guiAnh } from './guiAnh'
 import { supabase } from './supabase'
 import { taoMaLop } from './maLop'
 import type { MaGiaoDien } from '../themes'
+import type { CapHoc } from './guiAnh'
 
 export interface LopQuanTri {
   id: string
@@ -18,6 +19,8 @@ export interface LopQuanTri {
   het_han: string | null
   tao_luc: string
   luon_can_mat_khau: boolean
+  /** Cấp học (thiếu = THPT, vd danh sách lớp không trả cột này) */
+  cap?: CapHoc
 }
 
 export interface LopTruongQT { id: string; ho_ten: string; sdt: string }
@@ -74,7 +77,7 @@ export function locLop(ds: LopDanhSach[], tuKhoa: string): LopDanhSach[] {
 export async function layLop(id: string): Promise<LopQuanTri | null> {
   const { data, error } = await supabase
     .from('lop')
-    .select('id, ma, ten_goi, ten_lop, truong, tinh, nien_khoa_bat_dau, nien_khoa_ket_thuc, giao_dien, trang_thai, het_han, tao_luc, luon_can_mat_khau')
+    .select('id, ma, ten_goi, ten_lop, truong, tinh, nien_khoa_bat_dau, nien_khoa_ket_thuc, giao_dien, trang_thai, het_han, tao_luc, luon_can_mat_khau, cap')
     .eq('id', id)
     .maybeSingle()
   if (error) throw error
@@ -88,6 +91,7 @@ export interface ThongTinLopMoi {
   nienKhoaBatDau: number | null
   nienKhoaKetThuc: number | null
   giaoDien: MaGiaoDien
+  cap: CapHoc
 }
 
 /** Tạo lớp: tự sinh mã (thử lại nếu trùng), đặt mật khẩu, tạo sơ đồ mặc định. */
@@ -104,6 +108,7 @@ export async function taoLop(tt: ThongTinLopMoi): Promise<{ lop: LopQuanTri; mat
         nien_khoa_bat_dau: tt.nienKhoaBatDau,
         nien_khoa_ket_thuc: tt.nienKhoaKetThuc,
         giao_dien: tt.giaoDien,
+        cap: tt.cap,
       })
       .select()
       .single()
@@ -123,7 +128,7 @@ export async function datMatKhau(lopId: string, matKhau: string) {
   if (error) throw error
 }
 
-export async function capNhatLop(id: string, thayDoi: Partial<Pick<LopQuanTri, 'giao_dien' | 'trang_thai' | 'ten_goi' | 'het_han' | 'luon_can_mat_khau'>>) {
+export async function capNhatLop(id: string, thayDoi: Partial<Pick<LopQuanTri, 'giao_dien' | 'trang_thai' | 'ten_goi' | 'het_han' | 'luon_can_mat_khau' | 'cap'>>) {
   const { error } = await supabase.from('lop').update(thayDoi).eq('id', id)
   if (error) throw error
 }
@@ -534,4 +539,17 @@ export async function luuThayCo(lopId: string, id: string | null, c: Omit<ThayCo
 export async function xoaThayCo(id: string) {
   const { error } = await supabase.from('thay_co').delete().eq('id', id)
   if (error) throw error
+}
+
+/**
+ * Dọn file của các ảnh lớp trưởng đã xóa hẳn (lớp trưởng không có quyền xóa file trên kho).
+ * Gọi lặng lẽ mỗi lần mở danh sách lớp; lỗi thì bỏ qua, lần sau dọn tiếp.
+ */
+export async function donFileChoXoa(): Promise<number> {
+  const { data, error } = await supabase.from('file_cho_xoa').select('duong_dan').limit(500)
+  if (error || !data?.length) return 0
+  const ds = data.map((d) => d.duong_dan as string)
+  await xoaNhieu(ds)
+  await supabase.from('file_cho_xoa').delete().in('duong_dan', ds)
+  return ds.length
 }

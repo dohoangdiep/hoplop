@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom'
 import {
-  dangNhap, dangXuat, cacLopCuaToi, duLieuLop, doiTrangThaiAnh, xepAnh, luuBuoiHop, xoaBuoiHop, datAnhTapThe,
+  dangNhap, dangXuat, cacLopCuaToi, duLieuLop, doiTrangThaiAnh, xepAnh, xoaAnhLT, luuBuoiHop, xoaBuoiHop, datAnhTapThe,
   tokenLopTruong, HetPhien, type LopCuaToi, type DuLieuLT, type AnhLT, type ChuongLT, type BuoiHopSua,
 } from '../lib/lopTruong'
-import { MUC_ANH, TEN_MUC, maNoiAnh, giaiNoiAnh, noiCuaAnh } from '../lib/guiAnh'
+import { mucAnh, tenMuc, maNoiAnh, giaiNoiAnh, noiCuaAnh, type CapHoc } from '../lib/guiAnh'
 import { linkXemNhieu } from '../lib/storage'
 import { linkQrChuong, veToQr } from '../lib/toQr'
 import { bienCss, layGiaoDien, napFont, type MaGiaoDien } from '../themes'
@@ -110,13 +110,14 @@ function ChonLop({ ds, onDangXuat }: { ds: LopCuaToi[]; onDangXuat: () => void }
 }
 
 /* ---------------- Ảnh: chọn "thuộc đâu" ---------------- */
-function ChonNoiAnh({ id, value, chuong, onChange, disabled }: {
-  id: string; value: string; chuong: ChuongLT[]; onChange: (v: string) => void; disabled?: boolean
+function ChonNoiAnh({ id, value, chuong, cap, onChange, disabled }: {
+  id: string; value: string; chuong: ChuongLT[]; cap?: CapHoc; onChange: (v: string) => void; disabled?: boolean
 }) {
   return (
     <select id={id} className="lt-select" value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}>
       <optgroup label="Thời đi học">
-        {MUC_ANH.map((m) => <option key={m.ma} value={maNoiAnh({ muc: m.ma })}>{m.ten}</option>)}
+        {mucAnh(cap).map((m) => <option key={m.ma} value={maNoiAnh({ muc: m.ma })}>{m.ten}</option>)}
+        {value.startsWith('muc:') && !mucAnh(cap).some((m) => `muc:${m.ma}` === value) && <option value={value}>{tenMuc(value.slice(4), cap)}</option>}
       </optgroup>
       {chuong.length > 0 && (
         <optgroup label="Các lần họp lớp">
@@ -128,8 +129,8 @@ function ChonNoiAnh({ id, value, chuong, onChange, disabled }: {
   )
 }
 
-const tenNoi = (a: AnhLT, tenChuong: Map<string, string>) =>
-  a.loai === 'chuong' && a.chuong_id ? (tenChuong.get(a.chuong_id) ?? 'Buổi họp') : a.muc ? (TEN_MUC[a.muc] ?? 'Khác') : 'Chưa rõ'
+const tenNoi = (a: AnhLT, tenChuong: Map<string, string>, cap?: CapHoc) =>
+  a.loai === 'chuong' && a.chuong_id ? (tenChuong.get(a.chuong_id) ?? 'Buổi họp') : tenMuc(a.muc, cap)
 
 const TAB_ANH: { ma: AnhLT['trang_thai']; ten: string }[] = [
   { ma: 'cho-duyet', ten: 'Chờ duyệt' },
@@ -195,6 +196,13 @@ function DuyetAnh({ dl, url, lam }: {
         }}>Duyệt tất cả {ds.length} ảnh</button>
       )}
 
+      {tab === 'an' && ds.length > 0 && (
+        <button type="button" className="nut lt-nut-vien lt-nguy lt-nut-lon" onClick={() => {
+          if (window.confirm(`Xóa hẳn cả ${ds.length} ảnh đã ẩn? Ảnh sẽ mất vĩnh viễn, không lấy lại được.`))
+            lam(() => xoaAnhLT(dl.lop.id, ds.map((a) => a.id)), `Đã xóa hẳn ${ds.length} ảnh.`)
+        }}>Xóa hẳn tất cả {ds.length} ảnh đã ẩn</button>
+      )}
+
       {ds.length === 0 ? (
         <p className="chu-mo lt-trong">
           {tab === 'cho-duyet' ? 'Không có ảnh nào đang chờ. Khi các bạn gửi ảnh, ảnh sẽ nằm ở đây để bạn xem trước.' : 'Không có ảnh nào.'}
@@ -204,9 +212,9 @@ function DuyetAnh({ dl, url, lam }: {
           {ds.map((a) => (
             <li key={a.id}>
               <button type="button" className="lt-o-anh khung-anh xua" onClick={() => setMo(a.id)}
-                aria-label={`Xem ảnh${a.nguoi_gui_ten ? ' của ' + a.nguoi_gui_ten : ''}, ${tenNoi(a, tenChuong)}`}>
+                aria-label={`Xem ảnh${a.nguoi_gui_ten ? ' của ' + a.nguoi_gui_ten : ''}, ${tenNoi(a, tenChuong, dl.lop.cap)}`}>
                 {url[a.xem] ? <img src={url[a.xem]} alt="" loading="lazy" /> : <span className="lt-khong-anh">Ảnh</span>}
-                <small>{tenNoi(a, tenChuong)}</small>
+                <small>{tenNoi(a, tenChuong, dl.lop.cap)}</small>
               </button>
             </li>
           ))}
@@ -230,7 +238,7 @@ function DuyetAnh({ dl, url, lam }: {
               {anh.chu_thich && <><br />“{anh.chu_thich}”</>}
             </p>
             <label htmlFor="noi-anh" className="lt-nhan">Ảnh này chụp hồi nào</label>
-            <ChonNoiAnh id="noi-anh" value={maNoiAnh(noiCuaAnh(anh))} chuong={dl.chuong}
+            <ChonNoiAnh id="noi-anh" value={maNoiAnh(noiCuaAnh(anh))} chuong={dl.chuong} cap={dl.lop.cap}
               onChange={(v) => lam(() => xepAnh(dl.lop.id, [anh.id], giaiNoiAnh(v)), 'Đã chuyển ảnh.')} />
             <div className="lt-hang-nut">
               {anh.trang_thai !== 'da-duyet' && (
@@ -242,6 +250,10 @@ function DuyetAnh({ dl, url, lam }: {
                 <button type="button" className="nut lt-nut-vien" onClick={() => roiSangKe(() => doiTrangThaiAnh(dl.lop.id, [anh.id], 'an'))}>Ẩn ảnh này</button>
               )}
             </div>
+            <button type="button" className="lt-link lt-nguy-chu" onClick={() => {
+              if (window.confirm('Xóa hẳn ảnh này? Ảnh sẽ mất vĩnh viễn, không lấy lại được. (Muốn chỉ cất đi thì bấm "Ẩn ảnh này".)'))
+                roiSangKe(() => xoaAnhLT(dl.lop.id, [anh.id]), 'Đã xóa hẳn ảnh.')
+            }}>Xóa hẳn ảnh này</button>
             {anh.loai === 'chuong' && anh.chuong_id && (
               <button type="button" className="lt-link" onClick={() => lam(() => datAnhTapThe(dl.lop.id, anh.chuong_id!, anh.id), 'Đã đặt làm ảnh tập thể của buổi họp.')}>
                 {dl.chuong.find((c) => c.id === anh.chuong_id)?.anh_tap_the_id === anh.id ? 'Đây là ảnh tập thể của buổi này' : 'Đặt làm ảnh tập thể của buổi này'}

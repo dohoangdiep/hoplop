@@ -4,8 +4,8 @@ import { supabase } from '../lib/supabase'
 import { matKhauDaLuu } from '../lib/lop'
 import { tokenLopTruong } from '../lib/lopTruong'
 import {
-  guiAnh, MUC_ANH, TOI_DA_ANH, TOI_DA_MB, maNoiAnh, giaiNoiAnh, ghiAnhDaGui, tinhTrangAnhDaGui,
-  type TrangThaiAnh, type KetQuaGui, type AnhDaGui,
+  guiAnh, mucAnh, TOI_DA_ANH, TOI_DA_MB, maNoiAnh, giaiNoiAnh, ghiAnhDaGui, tinhTrangAnhDaGui,
+  type TrangThaiAnh, type KetQuaGui, type AnhDaGui, type CapHoc,
 } from '../lib/guiAnh'
 import { linkXemNhieu } from '../lib/storage'
 import { bienCss, layGiaoDien, napFont, type MaGiaoDien } from '../themes'
@@ -27,7 +27,7 @@ interface ThongTin {
   chon_chuong_id: string | null
   ma_qr_sai: boolean
   ho_ten: string | null
-  lop: { ma: string; ten_lop: string; truong: string; giao_dien: MaGiaoDien }
+  lop: { ma: string; ten_lop: string; truong: string; giao_dien: MaGiaoDien; cap?: CapHoc }
   chuong: BuoiHop[]
 }
 type TrangThaiTrang =
@@ -48,7 +48,7 @@ const khoaMk = (k: string) => `hoplop:mk:${k.toLowerCase()}`
 function thongTinLopMau(): ThongTin {
   return {
     vai: 'thanh-vien', nhan_anh: true, chon_chuong_id: null, ma_qr_sai: false, ho_ten: null,
-    lop: { ma: LOP_MAU.ma, ten_lop: LOP_MAU.tenLop, truong: LOP_MAU.truong, giao_dien: LOP_MAU.giaoDien },
+    lop: { ma: LOP_MAU.ma, ten_lop: LOP_MAU.tenLop, truong: LOP_MAU.truong, giao_dien: LOP_MAU.giaoDien, cap: LOP_MAU.cap },
     chuong: LOP_MAU.chuong.map((c) => ({ id: c.id, tieu_de: c.tieuDe, ngay: c.ngay || null, dia_diem: c.diaDiem ?? null })),
   }
 }
@@ -254,7 +254,7 @@ export default function GuiAnh() {
               <legend>Ảnh này chụp hồi nào?</legend>
               <span className="nhom">Thời đi học</span>
               <div className="tab-hang">
-                {MUC_ANH.map((m) => {
+                {mucAnh(tt!.lop.cap).map((m) => {
                   const v = maNoiAnh({ muc: m.ma })
                   return <button key={v} type="button" className="tab" aria-pressed={noi === v} onClick={() => setNoi(v)}>{m.ten}</button>
                 })}
