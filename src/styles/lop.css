@@ -177,3 +177,26 @@
 .so-sanh figcaption { font-size: 14px; color: var(--mau-muted); }
 .so-sanh figcaption b { font-family: var(--font-display); color: var(--mau-primary); font-size: 18px; }
 @media (min-width: 720px) { .so-sanh { display: grid; grid-template-columns: 1fr 1fr; } }
+
+/* ---------- Trang gửi ảnh ---------- */
+.gui-anh { padding: 20px 16px 40px; display: flex; flex-direction: column; gap: 18px; }
+.lien-ket-ve { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; color: var(--mau-primary); font-size: 14px; text-decoration: none; align-self: flex-start; }
+.o-chon-anh { position: relative; padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; border-style: dashed; color: var(--mau-primary); text-align: center; }
+.o-chon-anh:focus-within { outline: 2px solid var(--mau-primary); outline-offset: 2px; }
+.an-di { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.nut-bo-anh {
+  position: absolute; top: 4px; right: 4px; width: 36px; height: 36px; border-radius: 50%; border: none;
+  background: rgba(0,0,0,0.6); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.chon-hoi-nao { border: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.chon-hoi-nao legend { font-weight: 600; margin-bottom: 4px; padding: 0; }
+.chon-hoi-nao .nhom { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--mau-muted); margin-top: 4px; }
+.chon-hoi-nao .tab { min-height: 44px; }
+.anh-da-gui { display: flex; flex-direction: column; gap: 10px; padding-top: 18px; border-top: 1px solid var(--mau-line); }
+
+/* ---------- Thanh lớp trưởng trên trang lớp ---------- */
+.thanh-lop-truong {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  padding: 10px 16px; background: var(--mau-card); border-bottom: 1px solid var(--mau-line); font-size: 14px;
+}
+.thanh-lop-truong a { color: var(--mau-primary); font-weight: 600; min-height: 44px; display: inline-flex; align-items: center; }

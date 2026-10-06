@@ -23,7 +23,7 @@ function NhapMatKhau({ onGui, saiRoi, dangMo }: { onGui: (mk: string) => void; s
     <section className="muc">
       <form className="the" onSubmit={gui} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <h2 className="tieu-de" style={{ fontSize: 22 }}>Trang riêng của lớp</h2>
-        <p className="chu-mo" style={{ fontSize: 15, margin: 0 }}>Nhập mật khẩu lớp (ban liên lạc gửi trong nhóm Zalo) để vào xem. Máy này sẽ nhớ cho lần sau.</p>
+        <p className="chu-mo" style={{ fontSize: 15, margin: 0 }}>Nhập mật khẩu lớp (ban liên lạc gửi trong nhóm Zalo) để vào xem. Máy này sẽ nhớ cho lần sau. Có link hoặc mã QR của lớp thì không cần mật khẩu.</p>
         <label htmlFor="mk-lop" style={{ fontWeight: 600, fontSize: 14 }}>Mật khẩu lớp</label>
         <input
           id="mk-lop" value={mk} onChange={(e) => setMk(e.target.value)} autoCapitalize="none" autoCorrect="off" autoComplete="off"
@@ -94,6 +94,17 @@ export default function TrangLop() {
               {GIAO_DIEN[k].ten}
             </Link>
           ))}
+        </nav>
+      )}
+      {daMo && (lop.vai === 'lop-truong' || lop.vai === 'quan-tri') && (
+        <nav className="thanh-lop-truong" aria-label="Lối tắt lớp trưởng">
+          <span>
+            {lop.vai === 'lop-truong' ? 'Bạn là lớp trưởng' : 'Bạn đang xem với quyền quản trị'}
+            {lop.soChoDuyet ? ` · ${lop.soChoDuyet} ảnh chờ duyệt` : ''}
+          </span>
+          {lop.vai === 'lop-truong'
+            ? <Link to={`/lop-truong/${lop.ma}`}>{lop.soChoDuyet ? 'Duyệt ảnh' : 'Trang lớp trưởng'}</Link>
+            : <Link to={`/quan-tri/lop/${lop.id}`}>Mở quản trị lớp</Link>}
         </nav>
       )}
       <div className="khung">

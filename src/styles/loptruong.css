@@ -1,0 +1,80 @@
+/* Trang lớp trưởng. Như trang lớp: mọi giá trị giao diện đọc từ CSS variables của mẫu giao diện. */
+
+.lt { padding-bottom: 40px; }
+.lt-hep { padding: 28px 16px 40px; display: flex; flex-direction: column; gap: 18px; }
+.lt-the { padding: 12px 14px; margin: 0; font-size: 14px; }
+.lt-loi { color: var(--mau-accent); font-size: 14px; }
+.lt-the.lt-loi { border-color: var(--mau-accent); }
+
+.lt-form { padding: 18px; display: flex; flex-direction: column; gap: 8px; }
+.lt-form label, .lt-nhan { font-weight: 600; font-size: 14px; margin-top: 6px; display: block; }
+.lt-form input, .lt-form textarea, .lt .lt-select {
+  width: 100%; min-height: 48px; border-radius: var(--bo-sm); border: 1px solid var(--mau-line);
+  padding: 0 14px; font-size: 16px; font-family: inherit; background: var(--mau-card); color: var(--mau-ink);
+}
+.lt-form textarea { padding: 10px 14px; resize: vertical; }
+.lt .lt-nut-lon { min-height: 52px; font-size: 16px; margin-top: 8px; flex: none; }
+.lt .lt-nut-gon { flex: none; padding: 0 16px; }
+.lt .lt-nut-vien { background: var(--mau-card); color: var(--mau-primary); border: 1px solid var(--mau-primary); }
+.lt .lt-nguy { color: var(--mau-accent); border-color: var(--mau-accent); }
+.lt .lt-link {
+  background: none; border: none; padding: 0; min-height: 44px; display: inline-flex; align-items: center;
+  color: var(--mau-primary); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: underline;
+}
+.lt-hang-nut { display: flex; gap: 8px; flex-wrap: wrap; }
+.lt-hang-nut .nut { flex: 1 1 140px; text-decoration: none; }
+.lt-trong { font-size: 15px; padding: 12px 0; }
+
+/* Chọn lớp */
+.lt-ds-lop { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.lt-ds-lop a { display: flex; flex-direction: column; gap: 4px; padding: 16px; color: inherit; text-decoration: none; min-height: 44px; }
+.lt-ds-lop strong { font-size: 16px; }
+
+/* Đầu trang một lớp */
+.lt-dau { background: var(--mau-card); border-bottom: 1px solid var(--mau-line); position: sticky; top: 0; z-index: 10; }
+.lt-dau-trong { padding: 14px 16px 8px; display: flex; flex-direction: column; gap: 8px; }
+.lt-dau .tieu-de-phu { font-size: 18px; }
+.lt-loi-tat { display: flex; gap: 16px; flex-wrap: wrap; }
+.lt-loi-tat a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--mau-primary); font-size: 14px; font-weight: 600; text-decoration: none; }
+.lt-tab-chinh { padding: 0 16px 12px; }
+.lt .lt-tab { min-height: 44px; font-size: 14px; }
+.lt .lt-tab[aria-selected='true'] { background: var(--mau-primary); border-color: var(--mau-primary); color: #fff; font-weight: 600; }
+.lt-than { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.lt-phan { display: flex; flex-direction: column; gap: 12px; }
+.lt-tieu-de { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.lt-chan { display: flex; gap: 20px; flex-wrap: wrap; padding-top: 24px; border-top: 1px solid var(--mau-line); }
+
+/* Lưới ảnh */
+.lt-luoi { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.lt .lt-o-anh { position: relative; width: 100%; aspect-ratio: 1; padding: 0; border: none; cursor: pointer; overflow: hidden; }
+.lt .lt-o-anh small {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 3px 5px; font-size: 11px; text-align: left;
+  background: rgba(0,0,0,0.55); color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lt .lt-o-anh:focus-visible { outline: 3px solid var(--mau-primary); outline-offset: 2px; }
+.lt-khong-anh { font-size: 12px; }
+@media (min-width: 520px) { .lt-luoi { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* Xem lớn và duyệt từng ảnh */
+.lt-xem {
+  position: fixed; inset: 0; z-index: 50; background: var(--mau-bg); color: var(--mau-ink);
+  display: flex; flex-direction: column; overflow-y: auto;
+}
+.lt-xem-dau { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; font-size: 14px; }
+.lt-xem-anh { flex: 1; min-height: 45vh; display: grid; grid-template-columns: 48px minmax(0, 1fr) 48px; align-items: center; gap: 4px; padding: 0 4px; }
+.lt-xem-anh img { width: 100%; max-height: 58vh; object-fit: contain; border-radius: var(--bo-sm); }
+.lt-xem-than { padding: 12px 16px 24px; display: flex; flex-direction: column; gap: 10px; max-width: 560px; width: 100%; margin: 0 auto; }
+.lt-xem-tt { margin: 0; font-size: 14px; line-height: 1.5; }
+.lt-nut-tron {
+  width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--mau-line); background: var(--mau-card); color: var(--mau-ink);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.lt-nut-tron:disabled { opacity: 0.35; cursor: default; }
+
+/* Buổi họp */
+.lt-ds-buoi { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.lt-ds-buoi > li { padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.lt-ds-buoi > li > .lt-form { padding: 0; border: none; box-shadow: none; }
+.lt-ds-buoi strong { font-size: 16px; }
+.lt-qr { display: flex; flex-direction: column; gap: 10px; padding-top: 6px; }
+.lt-qr img { width: 100%; max-width: 300px; align-self: center; border: 1px solid var(--mau-line); border-radius: var(--bo-sm); }

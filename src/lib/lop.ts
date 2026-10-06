@@ -4,6 +4,7 @@ import type { MaGiaoDien } from '../themes'
 import { LOP_MAU, MA_LOP_MAU } from '../data/lopMau'
 import { linkXemNhieu } from './storage'
 import { MUC_ANH } from './guiAnh'
+import { tokenLopTruong } from './lopTruong'
 
 export type KetQuaMoLop =
   | { trangThai: 'ok'; lop: Lop }
@@ -56,16 +57,24 @@ function chuyenLop(d: any): Lop {
     })),
     khoAnhXua: [],
     soAnhDaLuu: 0,
+    vai: d.vai ?? undefined,
+    soChoDuyet: d.so_cho_duyet ?? undefined,
   }
 }
 
-/** Mở trang lớp theo mã/tên gọi. Tự dùng mật khẩu đã lưu trên máy nếu có. */
+/**
+ * Mở trang lớp. Vào bằng mã lớp: không cần mật khẩu. Vào bằng tên gọi, hoặc lớp bật
+ * "Luôn cần mật khẩu": cần mật khẩu (tự dùng mật khẩu đã lưu trên máy nếu có).
+ * Lớp trưởng đã đăng nhập trên máy này thì không bao giờ phải nhập mật khẩu lớp của mình.
+ */
 export async function moLop(khoa: string, matKhau?: string): Promise<KetQuaMoLop> {
   const k = khoa.toLowerCase()
   if (k === MA_LOP_MAU) return { trangThai: 'ok', lop: LOP_MAU }
 
   const mk = matKhau ?? matKhauDaLuu(k)
-  const { data, error } = await supabase.rpc('xem_lop', { p_khoa: k, p_mat_khau: mk })
+  let { data, error } = await supabase.rpc('xem_lop', { p_khoa: k, p_mat_khau: mk, p_token: tokenLopTruong() })
+  // Cơ sở dữ liệu chưa chạy file 0006: dùng xem_lop cũ (2 tham số) để trang lớp không bị gián đoạn
+  if (error?.code === 'PGRST202') ({ data, error } = await supabase.rpc('xem_lop', { p_khoa: k, p_mat_khau: mk }))
   if (error || !data) return { trangThai: 'khong-tim-thay' }
 
   if (data.loi === 'khong-tim-thay') return { trangThai: 'khong-tim-thay' }

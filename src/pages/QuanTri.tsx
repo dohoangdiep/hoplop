@@ -4,9 +4,11 @@ import type { Session } from '@supabase/supabase-js'
 import QRCode from 'qrcode'
 import { supabase } from '../lib/supabase'
 import {
-  laQuanTriHeThong, danhSachLop, layLop, taoLop, datMatKhau, taoMatKhauLop, capNhatLop,
-  type LopQuanTri,
+  laQuanTriHeThong, danhSachLop, layLop, taoLop, datMatKhau, taoMatKhauLop, capNhatLop, locLop,
+  themLopTruong, taoPinMoi, xoaLopTruong, tinNhanLopTruong, linkZalo,
+  type LopQuanTri, type LopDanhSach, type LopTruongQT, type KetQuaThemLT,
 } from '../lib/quanTri'
+import { hienSdt } from '../lib/lopTruong'
 import { DANH_SACH_GIAO_DIEN, GIAO_DIEN, type MaGiaoDien } from '../themes'
 import { QuanLyThanhVien, SuaSoDo, QuanLyAnh, QuanLyChuong, NutNapDemo, BAT_DEMO } from './QuanTriLop'
 import type { ThanhVienQT, ChuongQT } from '../lib/quanTri'
@@ -97,10 +99,21 @@ function SaoChep({ text, nhan }: { text: string; nhan: string }) {
 }
 
 /* ---------------- Danh sách lớp ---------------- */
+function NutZalo({ lt }: { lt: LopTruongQT }) {
+  return (
+    <a className="qt-nut nho" href={linkZalo(lt.sdt)} target="_blank" rel="noreferrer" aria-label={`Nhắn Zalo cho ${lt.ho_ten}, ${hienSdt(lt.sdt)}`}>
+      Zalo {lt.ho_ten.split(/\s+/).pop()}
+    </a>
+  )
+}
+
 function DanhSach() {
-  const [ds, setDs] = useState<LopQuanTri[] | null>(null)
+  const [ds, setDs] = useState<LopDanhSach[] | null>(null)
   const [loi, setLoi] = useState('')
+  const [tim, setTim] = useState('')
   useEffect(() => { danhSachLop().then(setDs).catch((e) => setLoi(e.message)) }, [])
+  const loc = ds ? locLop(ds, tim) : []
+  const tongCho = ds?.reduce((n, l) => n + l.so_cho_duyet, 0) ?? 0
   return (
     <main className="qt-khung">
       <div className="qt-tieu-de">
@@ -108,19 +121,39 @@ function DanhSach() {
         <Link className="qt-nut chinh" to="/quan-tri/tao-lop">Tạo lớp mới</Link>
       </div>
       {loi && <p className="qt-loi">{loi}</p>}
-      {ds === null ? <p>Đang tải…</p> : ds.length === 0 ? (
+      {ds === null ? (!loi && <p>Đang tải…</p>) : ds.length === 0 ? (
         <p className="qt-mo">Chưa có lớp nào. Bấm “Tạo lớp mới” để bắt đầu.</p>
       ) : (
-        <ul className="qt-ds">
-          {ds.map((l) => (
-            <li key={l.id}>
-              <Link to={`/quan-tri/lop/${l.id}`}>
-                <strong>Lớp {l.ten_lop} · {l.truong}</strong>
-                <span>{l.nien_khoa_bat_dau}–{l.nien_khoa_ket_thuc} · mã <code>{l.ma}</code> · {TRANG_THAI[l.trang_thai] ?? l.trang_thai}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <>
+          <label htmlFor="tim-lop" className="qt-nhan">Tìm lớp</label>
+          <input id="tim-lop" type="search" value={tim} onChange={(e) => setTim(e.target.value)} placeholder="SĐT lớp trưởng (vài số cuối cũng được), mã lớp, tên lớp, trường…" autoComplete="off" />
+          <p className="qt-mo" style={{ fontSize: 13, margin: '6px 0 12px' }}>
+            {tim ? `${loc.length}/${ds.length} lớp` : `${ds.length} lớp`}{tongCho ? ` · ${tongCho} ảnh chờ duyệt` : ''}
+          </p>
+          {loc.length === 0 ? <p className="qt-mo">Không có lớp nào khớp “{tim}”.</p> : (
+            <ul className="qt-ds">
+              {loc.map((l) => (
+                <li key={l.id} className="qt-dong-lop">
+                  <Link to={`/quan-tri/lop/${l.id}`}>
+                    <strong>
+                      Lớp {l.ten_lop} · {l.truong}
+                      {l.so_cho_duyet > 0 && <span className="qt-huy-hieu">{l.so_cho_duyet} ảnh chờ duyệt</span>}
+                    </strong>
+                    <span>{l.nien_khoa_bat_dau}–{l.nien_khoa_ket_thuc} · mã <code>{l.ma}</code> · {TRANG_THAI[l.trang_thai] ?? l.trang_thai}</span>
+                    <span>
+                      {l.lop_truong.length
+                        ? l.lop_truong.map((t) => `${t.ho_ten} · ${hienSdt(t.sdt)}`).join('  ·  ')
+                        : 'Chưa có lớp trưởng'}
+                    </span>
+                  </Link>
+                  {l.lop_truong.length > 0 && (
+                    <div className="qt-hang qt-dong-zalo">{l.lop_truong.map((t) => <NutZalo key={t.id} lt={t} />)}</div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       )}
       {BAT_DEMO && ds && ds.length > 0 && (
         <section className="qt-muc">
@@ -130,6 +163,90 @@ function DanhSach() {
         </section>
       )}
     </main>
+  )
+}
+
+/* ---------------- Lớp trưởng: tin nhắn PIN ---------------- */
+function TheTinNhanPin({ lop, hoTen, kq }: { lop: Pick<LopQuanTri, 'ten_lop' | 'truong' | 'ma'>; hoTen: string; kq: { sdt: string; pin: string | null; lop_khac?: string | null } }) {
+  const tin = tinNhanLopTruong({ hoTen, sdt: kq.sdt, pin: kq.pin, tenLop: lop.ten_lop, truong: lop.truong, ma: lop.ma })
+  return (
+    <div className="qt-the qt-form">
+      <p style={{ margin: 0 }}>
+        <b>{hoTen}</b> · {hienSdt(kq.sdt)} · {kq.pin ? <>mã PIN <code>{kq.pin}</code></> : <>dùng chung mã PIN với {kq.lop_khac ?? 'lớp khác'}</>}
+      </p>
+      {kq.pin && <p className="qt-mo" style={{ fontSize: 13, margin: 0 }}>Ghi lại hoặc gửi ngay: hệ thống chỉ lưu dạng mã hóa, không xem lại được (chỉ tạo mã mới được).</p>}
+      <pre className="qt-tin-nhan">{tin}</pre>
+      <div className="qt-hang">
+        <SaoChep text={tin} nhan="Chép tin nhắn" />
+        <a className="qt-nut nho" href={linkZalo(kq.sdt)} target="_blank" rel="noreferrer">Mở Zalo của {hoTen.split(/\s+/).pop()}</a>
+      </div>
+    </div>
+  )
+}
+
+/** Thêm/xóa lớp trưởng, tạo PIN mới. Tối đa 2 người mỗi lớp. */
+function QuanLyLopTruong({ lop }: { lop: LopQuanTri }) {
+  const [ds, setDs] = useState<LopTruongQT[] | null>(null)
+  const [hoTen, setHoTen] = useState('')
+  const [sdt, setSdt] = useState('')
+  const [moi, setMoi] = useState<{ hoTen: string; kq: { sdt: string; pin: string | null; lop_khac?: string | null } } | null>(null)
+  const [loi, setLoi] = useState('')
+  const [dang, setDang] = useState(false)
+  const tai = async () => {
+    const all = await danhSachLop()
+    setDs(all.find((l) => l.id === lop.id)?.lop_truong ?? [])
+  }
+  useEffect(() => { tai().catch((e) => setLoi(e.message)) }, [lop.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const them = async (e: FormEvent) => {
+    e.preventDefault(); setLoi(''); setDang(true)
+    try {
+      const kq = await themLopTruong(lop.id, hoTen, sdt)
+      setMoi({ hoTen: hoTen.trim(), kq }); setHoTen(''); setSdt(''); await tai()
+    } catch (er) { setLoi((er as Error).message) } finally { setDang(false) }
+  }
+  const pinMoi = async (t: LopTruongQT) => {
+    if (!window.confirm(`Tạo mã PIN mới cho ${t.ho_ten}? Mã cũ hết dùng được, các máy đang đăng nhập sẽ phải đăng nhập lại.`)) return
+    setLoi('')
+    try { const r = await taoPinMoi(t.id); setMoi({ hoTen: t.ho_ten, kq: { sdt: r.sdt, pin: r.pin } }) }
+    catch (er) { setLoi((er as Error).message) }
+  }
+  const xoa = async (t: LopTruongQT) => {
+    if (!window.confirm(`Bỏ quyền lớp trưởng của ${t.ho_ten} ở lớp này?`)) return
+    setLoi('')
+    try { await xoaLopTruong(t.id); setMoi(null); await tai() } catch (er) { setLoi((er as Error).message) }
+  }
+
+  return (
+    <section className="qt-muc">
+      <h2>Lớp trưởng ({ds?.length ?? 0}/2)</h2>
+      <p className="qt-mo" style={{ fontSize: 13, marginTop: 0 }}>Lớp trưởng đăng nhập ở <code>/lop-truong</code> bằng SĐT + mã PIN để duyệt ảnh, tạo buổi họp và lấy mã QR. SĐT không hiện trên trang lớp.</p>
+      {ds === null ? <p>Đang tải…</p> : ds.length > 0 && (
+        <ul className="qt-ds-tv">
+          {ds.map((t) => (
+            <li key={t.id}>
+              <div><strong>{t.ho_ten}</strong><span>{hienSdt(t.sdt)}</span></div>
+              <div className="qt-hang">
+                <a className="qt-nut nho" href={linkZalo(t.sdt)} target="_blank" rel="noreferrer">Zalo</a>
+                <button type="button" className="qt-nut nho" onClick={() => pinMoi(t)}>Tạo PIN mới</button>
+                <button type="button" className="qt-nut nho nguy" onClick={() => xoa(t)}>Xóa</button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      {moi && <div style={{ marginTop: 12 }}><TheTinNhanPin lop={lop} hoTen={moi.hoTen} kq={moi.kq} /></div>}
+      {ds && ds.length < 2 && (
+        <form onSubmit={them} className="qt-form" style={{ marginTop: 8 }}>
+          <div className="qt-hai-cot">
+            <div><label htmlFor="lt-ten">Họ tên</label><input id="lt-ten" required value={hoTen} onChange={(e) => setHoTen(e.target.value)} placeholder="Nguyễn Thị Lan" /></div>
+            <div><label htmlFor="lt-sdt">Số điện thoại</label><input id="lt-sdt" required type="tel" inputMode="tel" value={sdt} onChange={(e) => setSdt(e.target.value)} placeholder="0912 345 678" /></div>
+          </div>
+          <button className="qt-nut" disabled={dang}>{dang ? 'Đang thêm…' : ds.length ? 'Thêm lớp phó' : 'Thêm lớp trưởng'}</button>
+        </form>
+      )}
+      {loi && <p className="qt-loi" role="alert">{loi}</p>}
+    </section>
   )
 }
 
@@ -159,17 +276,29 @@ function TaoLop() {
   const [gd, setGd] = useState<MaGiaoDien>('hoai-niem')
   const [dang, setDang] = useState(false)
   const [loi, setLoi] = useState('')
-  const [ketQua, setKetQua] = useState<{ lop: LopQuanTri; matKhau: string } | null>(null)
+  const [lt, setLt] = useState([{ hoTen: '', sdt: '' }, { hoTen: '', sdt: '' }])
+  const [ketQua, setKetQua] = useState<{ lop: LopQuanTri; matKhau: string; lopTruong: { hoTen: string; kq: KetQuaThemLT }[]; loiLt: string[] } | null>(null)
+  const doiLt = (i: number, k: 'hoTen' | 'sdt', v: string) => setLt(lt.map((x, j) => (j === i ? { ...x, [k]: v } : x)))
 
   const gui = async (e: FormEvent) => {
     e.preventDefault()
-    setLoi(''); setDang(true)
+    setLoi('')
+    const dsLt = lt.filter((x) => x.hoTen.trim() || x.sdt.trim())
+    if (dsLt.some((x) => !x.hoTen.trim() || !x.sdt.trim())) { setLoi('Lớp trưởng cần đủ cả họ tên và số điện thoại (hoặc để trống cả hai).'); return }
+    setDang(true)
     try {
-      setKetQua(await taoLop({
+      const r = await taoLop({
         tenLop, truong, tinh, giaoDien: gd,
         nienKhoaBatDau: bd ? Number(bd) : null,
         nienKhoaKetThuc: kt ? Number(kt) : null,
-      }))
+      })
+      const lopTruong: { hoTen: string; kq: KetQuaThemLT }[] = []
+      const loiLt: string[] = []
+      for (const x of dsLt) {
+        try { lopTruong.push({ hoTen: x.hoTen.trim(), kq: await themLopTruong(r.lop.id, x.hoTen, x.sdt) }) }
+        catch (er) { loiLt.push(`${x.hoTen}: ${(er as Error).message}`) }
+      }
+      setKetQua({ ...r, lopTruong, loiLt })
     } catch (e) {
       setLoi((e as Error).message)
     } finally { setDang(false) }
@@ -177,7 +306,7 @@ function TaoLop() {
 
   if (ketQua) {
     const url = linkLop(ketQua.lop.ma)
-    const tinNhan = `Trang kỷ niệm lớp ${ketQua.lop.ten_lop} · ${ketQua.lop.truong}\nLink: ${url}\nMật khẩu lớp: ${ketQua.matKhau}`
+    const tinNhan = `Trang kỷ niệm lớp ${ketQua.lop.ten_lop} · ${ketQua.lop.truong}\nLink cho cả lớp (bấm là vào, không cần mật khẩu): ${url}`
     return (
       <main className="qt-khung qt-hep">
         <h1>Đã tạo lớp {ketQua.lop.ten_lop}</h1>
@@ -186,9 +315,18 @@ function TaoLop() {
           <dt>Link</dt><dd><a href={url}>{url}</a></dd>
           <dt>Mật khẩu lớp</dt><dd><code>{ketQua.matKhau}</code></dd>
         </dl>
-        <p className="qt-mo">Ghi lại mật khẩu ngay: vì lý do bảo mật, hệ thống chỉ lưu dạng mã hóa, không xem lại được (chỉ đặt lại được).</p>
+        <p className="qt-mo">Mật khẩu lớp chỉ cần khi vào bằng tên gọi hoặc khi bật “Luôn cần mật khẩu”. Hệ thống chỉ lưu dạng mã hóa, không xem lại được (chỉ đặt lại được).</p>
+
+        <h2>Lớp trưởng</h2>
+        {ketQua.lopTruong.length === 0 && !ketQua.loiLt.length && <p className="qt-mo">Chưa thêm lớp trưởng. Thêm sau ở trang quản lý lớp.</p>}
+        <div className="qt-form">
+          {ketQua.lopTruong.map((x) => <TheTinNhanPin key={x.kq.id} lop={ketQua.lop} hoTen={x.hoTen} kq={x.kq} />)}
+        </div>
+        {ketQua.loiLt.map((l) => <p key={l} className="qt-loi" role="alert">{l}</p>)}
+
+        <h2 style={{ marginTop: 20 }}>Link cho cả lớp</h2>
         <div className="qt-hang">
-          <SaoChep text={tinNhan} nhan="Chép tin nhắn gửi ban liên lạc" />
+          <SaoChep text={tinNhan} nhan="Chép tin nhắn gửi nhóm Zalo lớp" />
           <button className="qt-nut" onClick={() => dieuHuong(`/quan-tri/lop/${ketQua.lop.id}`)}>Mở trang quản lý lớp</button>
         </div>
         <MaQR url={url} tenFile={`qr-lop-${ketQua.lop.ma}.png`} />
@@ -212,6 +350,18 @@ function TaoLop() {
           <div><label htmlFor="kt">Năm ra trường</label><input id="kt" inputMode="numeric" placeholder="2006" value={kt} onChange={(e) => setKt(e.target.value.replace(/\D/g, ''))} /></div>
         </div>
         <ChonGiaoDien value={gd} onChange={setGd} />
+        <fieldset className="qt-fieldset">
+          <legend>Lớp trưởng (tối đa 2, có thể thêm sau)</legend>
+          {lt.map((x, i) => (
+            <div className="qt-hai-cot" key={i}>
+              <div><label htmlFor={`lt-ten-${i}`}>{i === 0 ? 'Lớp trưởng' : 'Lớp phó (không bắt buộc)'}</label>
+                <input id={`lt-ten-${i}`} value={x.hoTen} onChange={(e) => doiLt(i, 'hoTen', e.target.value)} placeholder="Họ tên" /></div>
+              <div><label htmlFor={`lt-sdt-${i}`}>Số điện thoại</label>
+                <input id={`lt-sdt-${i}`} type="tel" inputMode="tel" value={x.sdt} onChange={(e) => doiLt(i, 'sdt', e.target.value)} placeholder="0912 345 678" /></div>
+            </div>
+          ))}
+          <p className="qt-mo" style={{ fontSize: 13, margin: '8px 0 0' }}>Hệ thống sinh mã PIN 6 số và soạn sẵn tin nhắn Zalo để bạn gửi riêng.</p>
+        </fieldset>
         <button className="qt-nut chinh" disabled={dang}>{dang ? 'Đang tạo…' : 'Tạo lớp'}</button>
       </form>
       {loi && <p className="qt-loi" role="alert">{loi}</p>}
@@ -235,6 +385,10 @@ function ChiTietLop() {
 
   const doiGiaoDien = async (gd: MaGiaoDien) => {
     await capNhatLop(lop.id, { giao_dien: gd }); setLop({ ...lop, giao_dien: gd }); setThongBao('Đã đổi giao diện.')
+  }
+  const doiLuonCanMk = async (bat: boolean) => {
+    await capNhatLop(lop.id, { luon_can_mat_khau: bat }); setLop({ ...lop, luon_can_mat_khau: bat })
+    setThongBao(bat ? 'Đã bật: mọi người vào lớp đều phải nhập mật khẩu (trừ lớp trưởng và người quét QR buổi họp để gửi ảnh).' : 'Đã tắt: vào bằng mã lớp không cần mật khẩu.')
   }
   const doiTrangThai = async (tt: string) => {
     await capNhatLop(lop.id, { trang_thai: tt }); setLop({ ...lop, trang_thai: tt }); setThongBao('Đã cập nhật trạng thái.')
@@ -261,12 +415,21 @@ function ChiTietLop() {
 
       <ChonGiaoDien value={lop.giao_dien} onChange={doiGiaoDien} />
 
+      <QuanLyLopTruong lop={lop} />
+
       <section className="qt-muc">
         <h2>Mật khẩu lớp</h2>
+        <p className="qt-mo" style={{ fontSize: 13, marginTop: 0 }}>
+          Vào bằng mã lớp (<code>{lop.ma}</code>, link hoặc QR) thì không cần mật khẩu. Mật khẩu chỉ hỏi khi vào bằng tên gọi{lop.ten_goi ? <> (<code>{lop.ten_goi}</code>)</> : ''}, hoặc khi bật công tắc dưới đây.
+        </p>
+        <label className="qt-chon" htmlFor="luon-can-mk">
+          <input id="luon-can-mk" type="checkbox" checked={!!lop.luon_can_mat_khau} onChange={(e) => doiLuonCanMk(e.target.checked)} />
+          Luôn cần mật khẩu (dùng khi link lớp bị lộ ra ngoài)
+        </label>
         {matKhauMoi ? (
           <p>Mật khẩu mới: <code>{matKhauMoi}</code> <SaoChep text={matKhauMoi} nhan="Chép" /></p>
         ) : (
-          <button className="qt-nut" onClick={datLaiMatKhau}>Đặt lại mật khẩu lớp</button>
+          <button className="qt-nut" onClick={datLaiMatKhau} style={{ marginTop: 8 }}>Đặt lại mật khẩu lớp</button>
         )}
       </section>
 
@@ -333,10 +496,10 @@ export default function QuanTri() {
         : laAdmin === undefined ? <main className="qt-khung">Đang kiểm tra quyền…</main>
         : !laAdmin ? (
           <main className="qt-khung qt-hep">
-            <h1>Tài khoản chưa có quyền quản trị</h1>
-            <p>Đây là lần đăng nhập đầu tiên của <b>{phien.user.email}</b>. Để cấp quyền quản trị hệ thống, chủ dịch vụ chạy câu lệnh sau trong Supabase → SQL Editor, rồi tải lại trang này:</p>
-            <pre className="qt-code">{`insert into public.quan_tri_he_thong (user_id)\nvalues ('${phien.user.id}');`}</pre>
-            <SaoChep text={`insert into public.quan_tri_he_thong (user_id) values ('${phien.user.id}');`} nhan="Chép câu lệnh" />
+            <h1>Trang này dành cho người dựng trang</h1>
+            <p>Tài khoản <b>{phien.user.email}</b> chưa có quyền quản trị hệ thống.</p>
+            <p>Nếu bạn là lớp trưởng, hãy vào <Link to="/lop-truong">trang lớp trưởng</Link> và đăng nhập bằng số điện thoại + mã PIN. Các bạn trong lớp chỉ cần link hoặc mã QR của lớp, không cần đăng nhập.</p>
+            <button className="qt-nut" onClick={() => supabase.auth.signOut()}>Đăng xuất</button>
           </main>
         ) : (
           <Routes>

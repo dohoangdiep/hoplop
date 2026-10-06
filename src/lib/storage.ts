@@ -2,6 +2,7 @@
  * Mọi thao tác lưu trữ ảnh đi qua module này, để sau chuyển từ Supabase Storage
  * sang Cloudflare R2 / S3 (Viettel, PA) mà không phải sửa chỗ khác.
  */
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 
 const BUCKET = 'anh'
@@ -12,11 +13,30 @@ export async function taiLen(duongDan: string, file: Blob, kieu: string) {
   if (error && !/exists|duplicate/i.test(error.message)) throw error
 }
 
+/**
+ * Lớp trưởng xem được cả ảnh đã ẩn: gửi kèm token qua header x-hoplop-lt,
+ * hàm cho_phep_xem_anh phía máy chủ kiểm token đó.
+ */
+let khachLt: { token: string; khach: SupabaseClient } | null = null
+function khachTheoToken(token?: string | null): SupabaseClient {
+  if (!token) return supabase
+  if (khachLt?.token !== token) {
+    khachLt = {
+      token,
+      khach: createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY, {
+        global: { headers: { 'x-hoplop-lt': token } },
+        auth: { persistSession: false, autoRefreshToken: false, storageKey: 'hoplop-lt-anh' },
+      }),
+    }
+  }
+  return khachLt.khach
+}
+
 /** Ký link xem có hạn cho nhiều ảnh cùng lúc. Trả về map đường dẫn -> url. */
-export async function linkXemNhieu(duongDan: string[], giay = 3600): Promise<Record<string, string>> {
-  const ds = [...new Set(duongDan.filter(Boolean))]
+export async function linkXemNhieu(duongDan: (string | null | undefined)[], giay = 3600, tokenLopTruong?: string | null): Promise<Record<string, string>> {
+  const ds = [...new Set(duongDan.filter((d): d is string => !!d))]
   if (!ds.length) return {}
-  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrls(ds, giay)
+  const { data, error } = await khachTheoToken(tokenLopTruong).storage.from(BUCKET).createSignedUrls(ds, giay)
   if (error || !data) return {}
   const kq: Record<string, string> = {}
   for (const d of data) if (d.path && d.signedUrl) kq[d.path] = d.signedUrl

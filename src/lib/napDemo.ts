@@ -57,7 +57,7 @@ export async function napDemo(lop: LopQuanTri, bao: (text: string) => void): Pro
   const nam = lop.nien_khoa_ket_thuc ?? 2006
   const seedLop = [...lop.id].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) >>> 0, 7)
   let soAnh = 0
-  const gui1 = async (file: File, opts: { muc?: string; chuThich?: string; maQr?: string }) => {
+  const gui1 = async (file: File, opts: { muc?: string; chuThich?: string; chuongId?: string }) => {
     const r = await guiAnh([file], { khoa: lop.ma, nguoiGui: 'Ảnh minh họa', ...opts }, () => {})
     if (r.loi) throw new Error(r.loi)
     soAnh += r.ids.length
@@ -140,7 +140,7 @@ export async function napDemo(lop: LopQuanTri, bao: (text: string) => void): Pro
   for (let i = 0; i < 4; i++) {
     bao(`Đang tải ảnh buổi họp ${i + 1}/4…`)
     const file = await veCanh('hop-lop', seedLop + 9000 + i * 7, lop.ten_lop, namTruoc, `HỌP LỚP ${lop.ten_lop.toUpperCase()} · ${soNamTruoc} NĂM`)
-    const id = await gui1(file, { maQr: chQua.ma_qr, chuThich: 'Buổi họp lớp (ảnh minh họa)' })
+    const id = await gui1(file, { chuongId: chQua.id, chuThich: 'Buổi họp lớp (ảnh minh họa)' })
     if (i === 0 && id) await datAnhTapThe(chQua.id, id)
   }
 

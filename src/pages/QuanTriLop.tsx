@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   dsThanhVien, phanTichDanhSach, themThanhVien, suaThanhVien, xoaThanhVien,
   laySoDo, luuSoDo, khoaCho, type ThanhVienQT, type SoDoQT,
-  dsAnh, capNhatAnh, capNhatNhieuAnh, ganAnhChoBan, datAnhBia, type AnhQT, type LopQuanTri,
+  dsAnh, capNhatAnh, capNhatNhieuAnh, xepAnhQT, ganAnhChoBan, datAnhBia, type AnhQT, type LopQuanTri,
   linkAnhThanhVien, taiAnhChoBan,
   dsChuong, taoChuong, suaChuong, xoaChuong, datAnhTapThe, type ChuongQT, type ChuongSua,
 } from '../lib/quanTri'
-import QRCode from 'qrcode'
+import { linkQrChuong, veToQr } from '../lib/toQr'
 import { linkXemNhieu, linkTaiGoc } from '../lib/storage'
-import { MUC_ANH, TEN_MUC } from '../lib/guiAnh'
+import { MUC_ANH, TEN_MUC, maNoiAnh, giaiNoiAnh, noiCuaAnh } from '../lib/guiAnh'
 
 /* ---------------- Thành viên ---------------- */
 export function QuanLyThanhVien({ lopId, lopMa, onDoi }: { lopId: string; lopMa: string; onDoi: (ds: ThanhVienQT[]) => void }) {
@@ -256,42 +256,6 @@ export function SuaSoDo({ lopId, thanhVien }: { lopId: string; thanhVien: ThanhV
 }
 
 /* ---------------- Các lần họp (chương) ---------------- */
-const linkQrChuong = (maLop: string, maQr: string) => `${window.location.origin}/${maLop}/q/${maQr}`
-
-/** Vẽ tờ QR để in đặt trên bàn tiệc: tên buổi họp, mã QR to, lời dặn ngắn. */
-async function veToQr(url: string, tenLop: string, truong: string, tieuDe: string, phu: string): Promise<string> {
-  const W = 1240, H = 1754 // A5 dọc ~150dpi
-  const c = document.createElement('canvas'); c.width = W; c.height = H
-  const g = c.getContext('2d')!
-  try { await document.fonts.load('700 60px "Be Vietnam Pro"') } catch { /* dùng phông mặc định */ }
-  const font = (w: number, px: number) => `${w} ${px}px "Be Vietnam Pro", system-ui, sans-serif`
-  g.fillStyle = '#fff'; g.fillRect(0, 0, W, H)
-  g.textAlign = 'center'; g.fillStyle = '#22203A'
-  const dong = (chu: string, y: number, f: string, rongMax = W - 160) => {
-    g.font = f
-    const tu = chu.split(' '); let hang = ''; const ds: string[] = []
-    for (const t of tu) { const thu = hang ? hang + ' ' + t : t; if (g.measureText(thu).width > rongMax && hang) { ds.push(hang); hang = t } else hang = thu }
-    if (hang) ds.push(hang)
-    const cao = parseInt(f.split(' ')[1]) * 1.25
-    ds.forEach((d, i) => g.fillText(d, W / 2, y + i * cao))
-    return y + ds.length * cao
-  }
-  let y = 150
-  y = dong(`Lớp ${tenLop} · ${truong}`, y, font(500, 40))
-  y = dong(tieuDe, y + 40, font(700, 72))
-  if (phu) y = dong(phu, y + 10, font(400, 38))
-  const qr = document.createElement('canvas')
-  await QRCode.toCanvas(qr, url, { width: 820, margin: 1 })
-  const yQr = Math.max(y + 40, 520)
-  g.drawImage(qr, (W - 820) / 2, yQr)
-  y = yQr + 820 + 90
-  y = dong('Quét mã để gửi ảnh vào album chung của lớp', y, font(700, 46))
-  dong('Không cần cài app, không cần đăng nhập', y + 6, font(400, 36))
-  g.fillStyle = '#6B6680'
-  dong(url.replace(/^https?:\/\//, ''), H - 70, font(400, 28))
-  return c.toDataURL('image/png')
-}
-
 function QrChuong({ c, maLop, tenLop, truong }: { c: ChuongQT; maLop: string; tenLop: string; truong: string }) {
   const [src, setSrc] = useState('')
   const [daChep, setDaChep] = useState(false)
@@ -308,18 +272,16 @@ function QrChuong({ c, maLop, tenLop, truong }: { c: ChuongQT; maLop: string; te
         </button>
         <a className="qt-nut nho" href={url} target="_blank" rel="noreferrer">Mở thử</a>
       </div>
-      <p className="qt-mo" style={{ fontSize: 13, margin: 0 }}>In ra đặt ở bàn tiệc hoặc gửi link vào nhóm Zalo. Ảnh khách gửi nằm ở “Chờ duyệt”; ảnh bạn gửi khi đang đăng nhập quản trị được duyệt sẵn.</p>
+      <p className="qt-mo" style={{ fontSize: 13, margin: 0 }}>In ra đặt ở bàn tiệc hoặc gửi link vào nhóm Zalo. Quét là mở trang gửi ảnh với buổi này chọn sẵn, mã QR không hết hạn. Ảnh các bạn gửi nằm ở “Chờ duyệt”; ảnh của lớp trưởng và quản trị hiện ngay.</p>
     </div>
   )
 }
 
-const ngayO = (iso: string | null) => (iso ? iso.slice(0, 10) : '')
-const ngayTuO = (d: string, cuoiNgay: boolean) => (d ? new Date(`${d}T${cuoiNgay ? '23:59:59' : '00:00:00'}`).toISOString() : null)
 
 function FormChuong({ dau, onLuu, onHuy }: { dau?: ChuongQT; onLuu: (c: ChuongSua & { tieu_de: string }) => Promise<void>; onHuy: () => void }) {
   const [f, setF] = useState({
     tieu_de: dau?.tieu_de ?? '', ngay: dau?.ngay ?? '', dia_diem: dau?.dia_diem ?? '', mo_ta: dau?.mo_ta ?? '',
-    video_url: dau?.video_url ?? '', tu: ngayO(dau?.qr_hieu_luc_tu ?? null), den: ngayO(dau?.qr_hieu_luc_den ?? null),
+    video_url: dau?.video_url ?? '',
   })
   const [dang, setDang] = useState(false)
   const [loi, setLoi] = useState('')
@@ -332,7 +294,9 @@ function FormChuong({ dau, onLuu, onHuy }: { dau?: ChuongQT; onLuu: (c: ChuongSu
     try {
       await onLuu({
         tieu_de: f.tieu_de.trim(), ngay: f.ngay || null, dia_diem: f.dia_diem.trim() || null, mo_ta: f.mo_ta.trim() || null,
-        video_url: f.video_url.trim() || null, qr_hieu_luc_tu: ngayTuO(f.tu, false), qr_hieu_luc_den: ngayTuO(f.den, true),
+        video_url: f.video_url.trim() || null,
+        // QR không còn hết hạn: xóa khoảng ngày cũ nếu buổi này từng đặt
+        qr_hieu_luc_tu: null, qr_hieu_luc_den: null,
       })
     } catch (er) { setLoi((er as Error).message) } finally { setDang(false) }
   }
@@ -348,13 +312,6 @@ function FormChuong({ dau, onLuu, onHuy }: { dau?: ChuongQT; onLuu: (c: ChuongSu
       <textarea id={id('mt')} rows={3} className="qt-o-van" value={f.mo_ta} onChange={doi('mo_ta')} />
       <label htmlFor={id('vd')}>Link video (YouTube, Google Drive… không bắt buộc)</label>
       <input id={id('vd')} inputMode="url" value={f.video_url} onChange={doi('video_url')} placeholder="https://" />
-      <fieldset className="qt-fieldset">
-        <legend>Nhận ảnh qua QR (để trống = luôn nhận)</legend>
-        <div className="qt-hai-cot">
-          <div><label htmlFor={id('tu')}>Từ ngày</label><input id={id('tu')} type="date" value={f.tu} onChange={doi('tu')} /></div>
-          <div><label htmlFor={id('den')}>Đến hết ngày</label><input id={id('den')} type="date" value={f.den} onChange={doi('den')} /></div>
-        </div>
-      </fieldset>
       <div className="qt-hang">
         <button className="qt-nut chinh" disabled={dang}>{dang ? 'Đang lưu…' : 'Lưu'}</button>
         <button type="button" className="qt-nut" onClick={onHuy}>Hủy</button>
@@ -456,7 +413,7 @@ export function QuanLyAnh({ lopId, maLop, thanhVien, chuong = [] }: { lopId: str
   }
 
   if (!ds) return <section className="qt-muc"><h2>Ảnh</h2><p>Đang tải…</p></section>
-  const theoNhom = ds.filter((a) => thuoc === 'tat-ca' || (thuoc === 'xua' ? a.loai === 'xua' : a.chuong_id === thuoc))
+  const theoNhom = ds.filter((a) => thuoc === 'tat-ca' || (thuoc === 'xua' ? a.loai === 'xua' : thuoc === 'khong-ro' ? a.loai === 'xua' && !a.muc : a.chuong_id === thuoc))
   const loc = theoNhom.filter((a) => a.trang_thai === tab)
   const dem = (t: AnhQT['trang_thai']) => theoNhom.filter((a) => a.trang_thai === t).length
   const tenChuong = new Map(chuong.map((c) => [c.id, c.tieu_de]))
@@ -468,18 +425,15 @@ export function QuanLyAnh({ lopId, maLop, thanhVien, chuong = [] }: { lopId: str
         <h2>Ảnh</h2>
         <a className="qt-nut nho" href={`/${maLop}/gui-anh`} target="_blank" rel="noreferrer">Tải ảnh lên</a>
       </div>
-      <p className="qt-mo" style={{ fontSize: 13, marginTop: 0 }}>Ảnh do quản trị tải lên được duyệt sẵn. Ảnh thành viên gửi nằm ở “Chờ duyệt”.</p>
+      <p className="qt-mo" style={{ fontSize: 13, marginTop: 0 }}>Ảnh do quản trị và lớp trưởng tải lên được duyệt sẵn. Ảnh thành viên gửi nằm ở “Chờ duyệt” (lớp trưởng cũng duyệt được trên điện thoại).</p>
 
-      {chuong.length > 0 && (
-        <>
-          <label htmlFor="loc-thuoc" className="qt-nhan">Xem ảnh của</label>
-          <select id="loc-thuoc" value={thuoc} onChange={(e) => { setThuoc(e.target.value); setDangMo(null) }}>
-            <option value="tat-ca">Tất cả</option>
-            <option value="xua">Kho ảnh xưa</option>
-            {chuong.map((c) => <option key={c.id} value={c.id}>{c.tieu_de}</option>)}
-          </select>
-        </>
-      )}
+      <label htmlFor="loc-thuoc" className="qt-nhan">Xem ảnh của</label>
+      <select id="loc-thuoc" value={thuoc} onChange={(e) => { setThuoc(e.target.value); setDangMo(null) }}>
+        <option value="tat-ca">Tất cả</option>
+        <option value="xua">Kho ảnh xưa</option>
+        <option value="khong-ro">Chưa rõ chụp hồi nào</option>
+        {chuong.map((c) => <option key={c.id} value={c.id}>{c.tieu_de}</option>)}
+      </select>
       <div className="qt-hang" role="group" aria-label="Lọc ảnh">
         {TAB_ANH.map((t) => (
           <button key={t.ma} className={`qt-nut nho ${tab === t.ma ? 'chinh' : ''}`} onClick={() => { setTab(t.ma); setDangMo(null) }}>
@@ -502,7 +456,7 @@ export function QuanLyAnh({ lopId, maLop, thanhVien, chuong = [] }: { lopId: str
             <button key={a.id} type="button" className={`qt-o-anh ${dangMo === a.id ? 'dang-chon' : ''}`} onClick={() => setDangMo(dangMo === a.id ? null : a.id)}
               aria-label={`Ảnh${a.chu_thich ? ': ' + a.chu_thich : ''}${a.nguoi_gui_ten ? ', ' + a.nguoi_gui_ten + ' gửi' : ''}`}>
               {url[a.duong_dan_xem] ? <img src={url[a.duong_dan_xem]} alt="" loading="lazy" /> : <span>…</span>}
-              <small>{a.loai === 'xua' ? TEN_MUC[a.muc ?? 'khac'] : 'Buổi họp'}</small>
+              <small>{a.loai === 'xua' ? (a.muc ? TEN_MUC[a.muc] ?? 'Chân dung' : 'Chưa rõ') : (a.chuong_id && tenChuong.get(a.chuong_id)) || 'Buổi họp'}</small>
             </button>
           ))}
         </div>
@@ -531,11 +485,19 @@ export function QuanLyAnh({ lopId, maLop, thanhVien, chuong = [] }: { lopId: str
             </>
           )}
 
-          {anhMo.loai === 'xua' && (
+          {anhMo.muc !== 'chan-dung' && (
             <>
-              <label htmlFor="muc-anh" className="qt-nhan">Mục trong kho ảnh xưa</label>
-              <select id="muc-anh" value={anhMo.muc ?? 'khac'} onChange={(e) => lam(() => capNhatAnh(anhMo.id, { muc: e.target.value }))}>
-                {MUC_ANH.map((m) => <option key={m.ma} value={m.ma}>{m.ten}</option>)}
+              <label htmlFor="noi-anh" className="qt-nhan">Ảnh này chụp hồi nào</label>
+              <select id="noi-anh" value={maNoiAnh(noiCuaAnh(anhMo))} onChange={(e) => lam(() => xepAnhQT([anhMo.id], giaiNoiAnh(e.target.value)))}>
+                <optgroup label="Thời đi học">
+                  {MUC_ANH.map((m) => <option key={m.ma} value={maNoiAnh({ muc: m.ma })}>{m.ten}</option>)}
+                </optgroup>
+                {chuong.length > 0 && (
+                  <optgroup label="Các lần họp lớp">
+                    {chuong.map((c) => <option key={c.id} value={maNoiAnh({ chuongId: c.id })}>{c.tieu_de}</option>)}
+                  </optgroup>
+                )}
+                <option value="khong-ro">Chưa rõ</option>
               </select>
             </>
           )}

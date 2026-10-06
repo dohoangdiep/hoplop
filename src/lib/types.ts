@@ -54,4 +54,8 @@ export interface Lop {
   chuong: Chuong[]
   khoAnhXua: MucAnh[]
   soAnhDaLuu: number
+  /** Người đang xem: thành viên, lớp trưởng hay chủ dịch vụ (lớp mẫu: không có) */
+  vai?: 'thanh-vien' | 'lop-truong' | 'quan-tri'
+  /** Chỉ có khi người xem là lớp trưởng hoặc chủ dịch vụ */
+  soChoDuyet?: number
 }

@@ -17,6 +17,13 @@ export interface LopQuanTri {
   trang_thai: string
   het_han: string | null
   tao_luc: string
+  luon_can_mat_khau: boolean
+}
+
+export interface LopTruongQT { id: string; ho_ten: string; sdt: string }
+export interface LopDanhSach extends LopQuanTri {
+  lop_truong: LopTruongQT[]
+  so_cho_duyet: number
 }
 
 const TU = ['hoaphuong', 'bangden', 'phantrang', 'aotrang', 'luubut', 'camtrai', 'begiang', 'santruong', 'thanhxuan', 'kyniem', 'trongtruong', 'cuoinam', 'tuoihoctro', 'banhoc', 'gioichoi']
@@ -33,19 +40,41 @@ export async function laQuanTriHeThong(): Promise<boolean> {
   return !error && data === true
 }
 
-export async function danhSachLop(): Promise<LopQuanTri[]> {
-  const { data, error } = await supabase
-    .from('lop')
-    .select('id, ma, ten_goi, ten_lop, truong, tinh, nien_khoa_bat_dau, nien_khoa_ket_thuc, giao_dien, trang_thai, het_han, tao_luc')
-    .order('tao_luc', { ascending: false })
-  if (error) throw error
-  return (data ?? []) as LopQuanTri[]
+/** Danh sách lớp kèm lớp trưởng (tên + SĐT) và số ảnh chờ duyệt */
+export async function danhSachLop(): Promise<LopDanhSach[]> {
+  const { data, error } = await supabase.rpc('qt_ds_lop')
+  if (error) {
+    if (error.code === 'PGRST202') throw new Error('Cơ sở dữ liệu chưa được cập nhật: hãy chạy file SQL 0006 trong Supabase → SQL Editor.')
+    throw error
+  }
+  return (data ?? []) as LopDanhSach[]
+}
+
+/** Bỏ dấu tiếng Việt, chữ thường: để tìm "thanh mien" ra "Thanh Miện" */
+export const boDau = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase()
+
+/**
+ * Tìm lớp theo SĐT lớp trưởng (gõ +84, 0, dấu cách, dấu chấm đều được; vài số cuối cũng ra),
+ * mã lớp, tên gọi, tên lớp, trường, tỉnh.
+ */
+export function locLop(ds: LopDanhSach[], tuKhoa: string): LopDanhSach[] {
+  const q = boDau(tuKhoa.trim())
+  if (!q) return ds
+  const so = q.replace(/[\s.+()-]/g, '')
+  const laSo = /^\d{3,}$/.test(so)
+  // "+84 912…" -> "0912…"; vẫn thử cả dạng gốc vì vài số cuối có thể bắt đầu bằng 84
+  const cachViet = laSo ? [so, ...(so.startsWith('84') ? ['0' + so.slice(2)] : [])] : []
+  return ds.filter((l) => {
+    if (laSo && l.lop_truong.some((t) => cachViet.some((c) => t.sdt.includes(c)))) return true
+    const chu = boDau([l.ma, l.ten_goi ?? '', `lop ${l.ten_lop}`, l.ten_lop, l.truong, l.tinh ?? '', ...l.lop_truong.map((t) => t.ho_ten)].join(' | '))
+    return q.split(/\s+/).every((tu) => chu.includes(tu))
+  })
 }
 
 export async function layLop(id: string): Promise<LopQuanTri | null> {
   const { data, error } = await supabase
     .from('lop')
-    .select('id, ma, ten_goi, ten_lop, truong, tinh, nien_khoa_bat_dau, nien_khoa_ket_thuc, giao_dien, trang_thai, het_han, tao_luc')
+    .select('id, ma, ten_goi, ten_lop, truong, tinh, nien_khoa_bat_dau, nien_khoa_ket_thuc, giao_dien, trang_thai, het_han, tao_luc, luon_can_mat_khau')
     .eq('id', id)
     .maybeSingle()
   if (error) throw error
@@ -94,9 +123,57 @@ export async function datMatKhau(lopId: string, matKhau: string) {
   if (error) throw error
 }
 
-export async function capNhatLop(id: string, thayDoi: Partial<Pick<LopQuanTri, 'giao_dien' | 'trang_thai' | 'ten_goi' | 'het_han'>>) {
+export async function capNhatLop(id: string, thayDoi: Partial<Pick<LopQuanTri, 'giao_dien' | 'trang_thai' | 'ten_goi' | 'het_han' | 'luon_can_mat_khau'>>) {
   const { error } = await supabase.from('lop').update(thayDoi).eq('id', id)
   if (error) throw error
+}
+
+/* ---------------- Lớp trưởng ---------------- */
+export interface KetQuaThemLT { id: string; sdt: string; pin: string | null; dung_chung: boolean; lop_khac: string | null }
+
+const LOI_LT: Record<string, string> = {
+  'ho-ten': 'Nhập họ tên lớp trưởng.',
+  sdt: 'Số điện thoại chưa đúng (cần 10 số, vd 0912 345 678).',
+  trung: 'Số điện thoại này đã là lớp trưởng của lớp này rồi.',
+  'du-2': 'Mỗi lớp tối đa 2 lớp trưởng. Xóa bớt một người trước nhé.',
+  'khong-tim-thay': 'Không tìm thấy lớp trưởng này.',
+}
+
+export async function themLopTruong(lopId: string, hoTen: string, sdt: string): Promise<KetQuaThemLT> {
+  const { data, error } = await supabase.rpc('qt_them_lop_truong', { p_lop: lopId, p_ho_ten: hoTen, p_sdt: sdt })
+  if (error) throw error
+  if (data?.loi) throw new Error(LOI_LT[data.loi] ?? 'Có lỗi, thử lại nhé.')
+  return data as KetQuaThemLT
+}
+
+/** PIN mới áp dụng cho mọi lớp cùng SĐT; mọi máy đang đăng nhập bị đăng xuất. */
+export async function taoPinMoi(lopTruongId: string): Promise<{ pin: string; sdt: string; so_lop: number }> {
+  const { data, error } = await supabase.rpc('qt_tao_pin_moi', { p_id: lopTruongId })
+  if (error) throw error
+  if (data?.loi) throw new Error(LOI_LT[data.loi] ?? 'Có lỗi, thử lại nhé.')
+  return data
+}
+
+export async function xoaLopTruong(lopTruongId: string) {
+  const { error } = await supabase.rpc('qt_xoa_lop_truong', { p_id: lopTruongId })
+  if (error) throw error
+}
+
+export const linkZalo = (sdt: string) => `https://zalo.me/${sdt}`
+
+/** Tin nhắn Zalo gửi riêng cho lớp trưởng: link lớp, cách đăng nhập, mã PIN. */
+export function tinNhanLopTruong(o: { hoTen: string; sdt: string; pin: string | null; tenLop: string; truong: string; ma: string }) {
+  const goc = window.location.origin
+  const ten = o.hoTen.trim().split(/\s+/).pop()
+  return [
+    `Chào ${ten}, trang kỷ niệm lớp ${o.tenLop} · ${o.truong} đã sẵn sàng.`,
+    `Link cho cả lớp (gửi vào nhóm Zalo được, không cần mật khẩu): ${goc}/${o.ma}`,
+    '',
+    `Riêng bạn là lớp trưởng: vào ${goc}/lop-truong để duyệt ảnh các bạn gửi, tạo buổi họp và in mã QR.`,
+    `Số điện thoại: ${o.sdt}`,
+    o.pin ? `Mã PIN: ${o.pin}` : 'Mã PIN: dùng mã PIN bạn đang có (giống lớp kia).',
+    'Mã PIN là của riêng bạn, đừng gửi vào nhóm nhé. Đăng nhập một lần, máy sẽ nhớ.',
+  ].join('\n')
 }
 
 /* ---------------- Thành viên ---------------- */
@@ -233,6 +310,16 @@ export async function dsAnh(lopId: string): Promise<AnhQT[]> {
 
 export async function capNhatAnh(id: string, thayDoi: Partial<Pick<AnhQT, 'trang_thai' | 'muc' | 'chu_thich'>>) {
   const { error } = await supabase.from('anh').update(thayDoi).eq('id', id)
+  if (error) throw error
+}
+
+/** Xếp ảnh vào một buổi họp, một mục ảnh xưa, hoặc "chưa rõ" (muc null) */
+export async function xepAnhQT(ids: string[], noi: { chuongId: string } | { muc: string | null }) {
+  if (!ids.length) return
+  const thayDoi = 'chuongId' in noi
+    ? { loai: 'chuong', chuong_id: noi.chuongId, muc: null }
+    : { loai: 'xua', chuong_id: null, muc: noi.muc }
+  const { error } = await supabase.from('anh').update(thayDoi).in('id', ids)
   if (error) throw error
 }
 

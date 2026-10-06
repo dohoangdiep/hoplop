@@ -1,4 +1,4 @@
-# hoplop: tiến độ và bàn giao (cập nhật 06/10/2026)
+# hoplop: tiến độ và bàn giao (cập nhật 06/10/2026, sau Đợt 1b)
 
 Đây là file bàn giao để chuyển sang một cuộc trò chuyện mới. Đặc tả đầy đủ của sản phẩm nằm trong `CLAUDE.md` ở gốc kho; file này chỉ ghi **đã làm gì, đang ở đâu, việc tiếp theo**.
 
@@ -35,8 +35,11 @@
 | `0003_anh.sql` | `tao_luot_gui`, `xong_tai_anh`, quyền tải/xem ảnh | Đã chạy |
 | `0004_muc_chan_dung.sql` | Thêm mục ảnh `chan-dung` | Đã chạy (lỗi demo "Không kết nối được" trước đây là do thiếu file này) |
 | `0005_chuong.sql` | `thong_tin_qr`, `xem_lop` trả thêm mô tả, video, ảnh tập thể từng buổi | Đã chạy (chủ dự án đã thử chương và ảnh chương) |
+| `0006_lop_truong_gui_anh_chung.sql` | Đợt 1b: lớp trưởng (SĐT + PIN), vào lớp bằng mã, trang gửi ảnh chung, công tắc "Luôn cần mật khẩu" | **Chưa chạy.** Code mới trên `main` cần file này (thiếu thì trang lớp báo không tìm thấy lớp) |
 
 Quản trị hệ thống: user của chủ dự án đã được thêm vào bảng `quan_tri_he_thong`.
+
+File 0006 đã được chạy thử trên Postgres 16 cục bộ (giả lập schema `auth`/`storage` của Supabase, chạy lần lượt 0001→0006), cùng một bộ thử đầu-cuối 23 bước trên bản build thật (Chromium, cỡ điện thoại 390px): tất cả đạt. Chưa thử trên Supabase thật.
 
 ## 4. Đã làm xong (Đợt 1)
 
@@ -58,34 +61,55 @@ Quản trị hệ thống: user của chủ dự án đã được thêm vào b�
    - Các trang khác tách gói (`React.lazy`), trang chủ nạp ~64KB gzip thay vì ~175KB. Thêm thẻ OG cho trang chủ trong `index.html`.
 8. **Dữ liệu demo để thử:** nút "Nạp ảnh demo" vẽ ảnh hoạt hình trên trình duyệt (24 bạn mẫu, sơ đồ, ~14 ảnh xưa, chân dung, 2 buổi họp), chạy tiếp được từ chỗ dừng. Bật/tắt bằng `VITE_BAT_DEMO` trong `.env.production` (1 = bật, 0 = tắt). **Tắt trước khi bán cho khách.**
 
-## 5. Quyết định ngày 06/10/2026: vai trò và hành trình (chưa làm)
+## 5. Đợt 1b đã làm (06/10/2026): vai trò và gửi ảnh chung
 
-Chi tiết trong `CLAUDE.md` mục 5 và 7. Tóm tắt những gì **thay đổi so với code hiện tại**:
+Theo `CLAUDE.md` mục 5 và 7. **Cần chạy `0006_lop_truong_gui_anh_chung.sql` trước khi dùng.**
 
-| Hiện tại | Đã chốt |
-|---|---|
-| Thành viên cần mã lớp + mật khẩu lớp | Vào bằng mã lớp là đủ. Vào bằng tên gọi, hoặc lớp bật "Luôn cần mật khẩu", mới hỏi mật khẩu |
-| Quản trị lớp đăng nhập email (bảng `quan_tri_lop`, chưa có giao diện mời) | Bỏ. Lớp trưởng đăng nhập **SĐT + PIN 6 số** ở `/lop-truong`. Tối đa 2 người/lớp, quyền như nhau. Chủ dịch vụ tạo tài khoản, sinh PIN, gửi qua Zalo |
-| Lớp trưởng chưa có giao diện riêng | Trang lớp trưởng trên điện thoại: duyệt ảnh, tạo buổi họp, lấy QR |
-| Danh sách lớp chỉ có tên | Hiện tên + SĐT lớp trưởng, nút Zalo, cột ảnh chờ duyệt; ô tìm theo SĐT / mã / tên lớp / trường |
-| Hai cửa gửi ảnh: "Gửi ảnh xưa" (chỉ kho ảnh xưa) và QR buổi họp (có hạn) | Một trang gửi ảnh chung, bước "Ảnh này chụp hồi nào?" gồm cả các buổi họp đã qua. QR chỉ chọn sẵn buổi; bỏ hạn QR |
-| Ảnh gửi qua QR khi chưa đăng nhập: chờ duyệt | Ảnh mọi thành viên gửi: chờ duyệt. Lớp trưởng và chủ dịch vụ: hiện ngay. Người gửi thấy ảnh mình đang chờ |
-| Màn hình "chưa có quyền" ở `/quan-tri` hiện câu SQL | Đổi thành lời nhắn thân thiện; `/quan-tri` chỉ dành cho chủ dịch vụ |
-| Trang chủ: ô Vào lớp | Giữ nguyên; giờ gõ mã lớp là vào thẳng, không hỏi mật khẩu |
+**Vào lớp**
+- Vào bằng mã lớp (link, QR, gõ ở trang chủ): không hỏi mật khẩu. Vào bằng tên gọi, hoặc lớp bật **"Luôn cần mật khẩu"** (công tắc ở trang quản trị lớp): hỏi mật khẩu.
+- Lớp trưởng đã đăng nhập trên máy thì không bao giờ phải nhập mật khẩu lớp mình. Trên trang lớp, lớp trưởng thấy thanh nhỏ "Bạn là lớp trưởng · N ảnh chờ duyệt → Duyệt ảnh".
+- Hàm dùng chung phía máy chủ: `quyen_vao_lop` trả `quan-tri | lop-truong | thanh-vien | can-mat-khau | tam-khoa`. `xem_lop` thêm tham số `p_token`.
 
-Không cần SMTP riêng gấp nữa, vì chỉ chủ dịch vụ đăng nhập bằng email.
+**Trang gửi ảnh chung** `/:ma/gui-anh` (và `/:ma/q/:maQr`, `/:ma/gui-anh?buoi=<id>`)
+- Chọn ảnh → "Ảnh này chụp hồi nào?": Thời đi học (6 mục) · Các lần họp lớp (buổi đã diễn ra) · Không nhớ rõ → chuyện hôm đó → tên → gửi. Phải chọn "hồi nào" mới gửi được.
+- QR buổi họp chỉ chọn sẵn buổi đó; QR **không còn hết hạn** (bỏ ô khoảng ngày trong form buổi họp). QR vẫn gửi được khi lớp bật "Luôn cần mật khẩu".
+- Ảnh thành viên: chờ duyệt. Ảnh lớp trưởng và quản trị: hiện ngay. "Không nhớ rõ" lưu `loai='xua', muc=null` (hiện ở mục Khác trên trang lớp; lớp trưởng lọc được "Chưa rõ" để xếp lại).
+- Người gửi thấy khối **"Ảnh bạn đã gửi"** (máy lưu id ảnh, hàm `tinh_trang_anh`): đang chờ / đã lên trang / không đưa lên.
+- Mỗi buổi trên dòng thời gian có nút "Gửi ảnh buổi này". `GuiAnhQr.tsx` đã gộp vào `GuiAnh.tsx`.
+
+**Lớp trưởng** `/lop-truong`
+- Đăng nhập SĐT (gõ +84, dấu cách đều được) + PIN 6 số. Sai 5 lần khóa 15 phút. Một lớp thì vào thẳng, hai lớp thì chọn.
+- Máy nhớ bằng **token phiên** (180 ngày), không lưu PIN trên máy; máy chủ chỉ lưu mã băm của token. "Tạo PIN mới" đăng xuất mọi máy của SĐT đó.
+- Một người một PIN: SĐT đã là lớp trưởng lớp khác thì dùng chung PIN đang có.
+- Tab **Duyệt ảnh**: Chờ duyệt / Đã lên trang / Đã ẩn, lọc theo kho ảnh xưa / chưa rõ / từng buổi; chạm ảnh để xem lớn, duyệt hoặc ẩn rồi tự sang ảnh kế; đổi "chụp hồi nào"; đặt ảnh tập thể của buổi; "Duyệt tất cả".
+- Tab **Buổi họp & mã QR**: thêm/sửa buổi, tờ QR A5 để in, gửi link vào Zalo. Chỉ xóa được buổi chưa có ảnh (buổi có ảnh thì nhờ chủ dịch vụ).
+- Mọi hàm ghi (`lt_*`) kiểm token phía máy chủ và chỉ đụng tới dữ liệu lớp của token đó.
+
+**Quản trị** `/quan-tri`
+- Danh sách lớp: tên + SĐT lớp trưởng, nút Zalo, nhãn "N ảnh chờ duyệt"; ô tìm theo SĐT (vài số cuối, +84), mã lớp, tên gọi, tên lớp, trường, tỉnh, tên lớp trưởng (gõ không dấu được).
+- Tạo lớp: nhập luôn lớp trưởng + lớp phó; hệ thống sinh PIN và soạn tin nhắn Zalo gửi riêng (chép một chạm, mở Zalo).
+- Trang lớp: mục **Lớp trưởng** (tối đa 2: thêm, Tạo PIN mới, Xóa, Zalo); công tắc **Luôn cần mật khẩu**.
+- Ảnh: một ô "Ảnh này chụp hồi nào" thay cho ô mục (chuyển được giữa mục ảnh xưa và các buổi).
+- `/quan-tri` khi tài khoản chưa có quyền: lời nhắn thân thiện, chỉ đường sang trang lớp trưởng (không còn hiện câu SQL).
+
+**Ghi chú kỹ thuật**
+- Ảnh chờ duyệt ký link xem được (để lớp trưởng duyệt và người gửi xem lại); đường dẫn chứa uuid ngẫu nhiên chỉ lộ cho người gửi, lớp trưởng, quản trị. Ảnh đã ẩn: chỉ quản trị và lớp trưởng (trình duyệt gửi token qua header `x-hoplop-lt`, `cho_phep_xem_anh` đọc `request.headers`). **Cần thử trên Supabase thật**: nếu Storage không chuyển header này vào Postgres thì tab "Đã ẩn" của lớp trưởng chỉ hiện chữ "Ảnh" thay cho hình (vẫn bấm "Hiện lại" được); trang quản trị không bị ảnh hưởng.
+- Bảng `quan_tri_lop` (quản trị lớp bằng email) để nguyên nhưng không còn dùng.
+- Bảng mới `lop_truong`, `phien_lop_truong`, `lan_sai_pin` bật RLS, không có policy: chỉ hàm `security definer` đọc ghi.
+
+**Cách thử sau khi chạy 0006**
+1. Quản trị → một lớp → Lớp trưởng → thêm bằng SĐT của bạn → chép mã PIN.
+2. Mở `/lop-truong` trên điện thoại (cửa sổ ẩn danh cũng được), đăng nhập.
+3. Ở máy khác, mở `/<mã lớp>/gui-anh`, gửi 2 ảnh → thấy "Đang chờ duyệt"; lớp trưởng thấy 2 ảnh ở Chờ duyệt, duyệt một, ẩn một → kiểm tra tab Đã ẩn có hiện hình không (xem ghi chú header ở trên).
+4. Tạo buổi họp ở trang lớp trưởng → tải tờ QR → quét bằng điện thoại.
 
 ## 6. Việc tiếp theo
 
-**Đợt 1b, làm theo thứ tự (cần file SQL `0006_...`):**
-1. Bảng `lop_truong` + hàm đăng nhập SĐT/PIN (bcrypt, khóa 15 phút sau 5 lần sai); quản trị: thêm/xóa lớp trưởng, tạo PIN mới, tin nhắn Zalo soạn sẵn; danh sách lớp có SĐT, nút Zalo, ảnh chờ duyệt, ô tìm kiếm.
-2. `xem_lop`: vào bằng `ma` không cần mật khẩu; bằng `ten_goi` hoặc `luon_can_mat_khau` thì cần. Thêm cột `lop.luon_can_mat_khau`.
-3. Trang gửi ảnh chung với bước "chụp hồi nào"; `tao_luot_gui` nhận `p_chuong_id`; QR `/:ma/q/:maQr` chọn sẵn buổi; ảnh thành viên luôn `cho-duyet`, của lớp trưởng (kiểm SĐT+PIN) thì `da-duyet`; hiện "ảnh của bạn đang chờ duyệt".
-4. Trang lớp trưởng `/lop-truong` (điện thoại trước): duyệt/ẩn ảnh, đổi mục hoặc buổi, tạo/sửa buổi họp, tờ QR. Các hàm ghi đều kiểm SĐT+PIN phía máy chủ.
-
 **Còn lại của Đợt 1:**
+- Chạy `0006` và thử theo các bước trên; gửi ảnh chụp màn hình nếu có chỗ lạ.
 - Điền số Zalo, tên hộ kinh doanh, địa chỉ trong `src/data/trangChu.ts`; thêm cảm nhận thật khi có lớp đầu tiên. Trang Chính sách bảo mật / Điều khoản (chưa có, nên chưa đặt link).
 - Tắt `VITE_BAT_DEMO` khi thử xong; có thể thêm nút "Xóa dữ liệu demo".
+- (Không gấp) Đổi tên gọi của lớp trong quản trị (cột có sẵn, chưa có ô nhập); tên cũ chuyển hướng.
 - (Không gấp) SMTP riêng cho email đăng nhập của chủ dịch vụ.
 
 **Đợt 2 (theo `CLAUDE.md` mục 9):**
@@ -94,13 +118,14 @@ Không cần SMTP riêng gấp nữa, vì chỉ chủ dịch vụ đăng nhập 
 9. Ngày hết hạn, chế độ chỉ xem, nhắc gia hạn
 10. Tên miền riêng, OG tags cho bot (Cloudflare Pages Function)
 
-**Ghi chú kỹ thuật:**
-- Trong trang lớp, buổi họp hiện ở dòng thời gian khi ngày ≤ hôm nay **hoặc** đã có ảnh. Buổi tương lai chưa có ảnh chỉ hiện ở ô Sắp họp lớp.
-- Ảnh chân dung (`muc = 'chan-dung'`) không hiện trong kho ảnh xưa.
-- Đường dẫn ảnh: `lop/{lop_id}/{xua|chuong}/{anh_id}/{xem.jpg|goc.<đuôi>}`; bucket riêng tư, hiển thị bằng signed URL.
+**Ghi chú kỹ thuật chung:**
+- Trong trang lớp, buổi họp hiện ở dòng thời gian khi ngày ≤ hôm nay **hoặc** đã có ảnh. Buổi tương lai chưa có ảnh chỉ hiện ở ô Sắp họp lớp; trang gửi ảnh cũng chỉ cho chọn buổi đã diễn ra (trừ buổi QR chọn sẵn).
+- Ảnh chân dung (`muc = 'chan-dung'`) không hiện trong kho ảnh xưa, không hiện ở trang lớp trưởng; chỉ quản trị gửi được mục này.
+- Đường dẫn ảnh: `lop/{lop_id}/{xua|chuong}/{anh_id}/{xem.jpg|goc.<đuôi>}`; bucket riêng tư, hiển thị bằng signed URL. Ảnh đổi buổi/mục không đổi đường dẫn.
+- Tờ QR vẽ trong `src/lib/toQr.ts` (dùng chung quản trị và lớp trưởng).
 
 ## 7. Cách bắt đầu cuộc trò chuyện mới
 
 Mở chat mới gắn với kho `dohoangdiep/hoplop`, rồi nhắn:
 
-> Làm tiếp dự án ở kho https://github.com/dohoangdiep/hoplop. Đọc `CLAUDE.md` và `docs/TIEN_DO.md` trước, rồi làm tiếp: Đợt 1b (vai trò lớp trưởng và gửi ảnh chung).
+> Làm tiếp dự án ở kho https://github.com/dohoangdiep/hoplop. Đọc `CLAUDE.md` và `docs/TIEN_DO.md` trước, rồi làm tiếp: [việc tiếp theo].

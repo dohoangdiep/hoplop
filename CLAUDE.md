@@ -140,7 +140,7 @@ Bật RLS cho mọi bảng. Viết migration SQL trong `supabase/migrations/`.
 5. Quản trị: danh sách lớp, tạo lớp mới (tự sinh mã, mật khẩu, QR), nhập thành viên, nhập sơ đồ chỗ ngồi, duyệt và xếp ảnh vào mục, tạo chương, chọn giao diện
 6. Trang chủ bán hàng `/` với ô "Vào lớp của bạn" và lớp mẫu công khai (không mật khẩu)
 
-**Đợt 1b – vai trò đã chốt 06/10 (làm trước trang chủ):**
+**Đợt 1b – vai trò đã chốt 06/10 (đã làm 06/10, file SQL 0006):**
 - Tài khoản lớp trưởng (SĐT + PIN), tìm lớp theo SĐT, cột "ảnh chờ duyệt" trong danh sách lớp
 - Vào lớp chỉ bằng mã lớp; tên gọi và công tắc "Luôn cần mật khẩu" mới hỏi mật khẩu
 - Trang gửi ảnh chung có bước "chụp hồi nào"; ảnh thành viên chờ duyệt

@@ -104,7 +104,7 @@ export function SapHopLop({ lop }: { lop: Lop }) {
       <div className="ten">{sap.tieuDe}</div>
       {sap.diaDiem && <div style={{ fontSize: 13, color: 'var(--mau-on-primary-muted)' }}>{sap.diaDiem}</div>}
       <div className="nut-hang">
-        <a className="nut trang" href={`/${lop.ma}/gui-anh`}>Gửi ảnh xưa</a>
+        <a className="nut trang" href={`/${lop.ma}/gui-anh`}>Gửi ảnh cho lớp</a>
         <a className="nut vien" href="#thu">Viết thư cho lớp</a>
       </div>
     </section>
@@ -221,7 +221,7 @@ export function KhoAnhXua({ lop }: { lop: Lop }) {
       ) : (
         <p className="chu-mo" style={{ fontSize: 15, margin: 0 }}>Chưa có ảnh xưa nào. Bạn nào còn giữ ảnh thì gửi lên đầu tiên nhé!</p>
       )}
-      <a className="nut-gui" href={`/${lop.ma}/gui-anh`}>Gửi thêm ảnh xưa</a>
+      <a className="nut-gui" href={`/${lop.ma}/gui-anh`}>Gửi thêm ảnh cho lớp</a>
       {phong !== null && <PhongTo ds={muc?.anh ?? []} viTri={phong} dong={() => setPhong(null)} />}
     </section>
   )
@@ -254,7 +254,7 @@ const ngayVN = (ngay: string) => {
 
 const SO_ANH_THU_GON = 6
 
-function MotLanHop({ c }: { c: Lop['chuong'][number] }) {
+function MotLanHop({ c, maLop }: { c: Lop['chuong'][number]; maLop: string }) {
   const [moHet, setMoHet] = useState(false)
   const [phong, setPhong] = useState<number | null>(null)
   const album = (c.anh ?? []).filter((a) => a.url)
@@ -300,6 +300,7 @@ function MotLanHop({ c }: { c: Lop['chuong'][number] }) {
             Xem video buổi họp
           </a>
         )}
+        {maLop !== 'xemmau' && <a className="nut-gui" href={`/${maLop}/gui-anh?buoi=${c.id}`}>Gửi ảnh buổi này</a>}
       </div>
       {phong !== null && <PhongTo ds={ds} viTri={phong} dong={() => setPhong(null)} />}
     </div>
@@ -316,7 +317,7 @@ export function DongThoiGian({ lop }: { lop: Lop }) {
         <h2 className="tieu-de">Những lần gặp lại</h2>
       </div>
       <div className="dong-tg">
-        {ds.map((c) => <MotLanHop key={c.id} c={c} />)}
+        {ds.map((c) => <MotLanHop key={c.id} c={c} maLop={lop.ma} />)}
       </div>
     </section>
   )

@@ -8,7 +8,7 @@ import { SapCo } from './pages/SapCo'
 const TrangLop = lazy(() => import('./pages/TrangLop'))
 const QuanTri = lazy(() => import('./pages/QuanTri'))
 const GuiAnh = lazy(() => import('./pages/GuiAnh'))
-const GuiAnhQr = lazy(() => import('./pages/GuiAnhQr'))
+const LopTruong = lazy(() => import('./pages/LopTruong'))
 
 const fontChung = document.createElement('link')
 fontChung.rel = 'stylesheet'
@@ -23,9 +23,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <Routes>
         <Route path="/" element={<TrangChu />} />
         <Route path="/quan-tri/*" element={<QuanTri />} />
+        <Route path="/lop-truong/*" element={<LopTruong />} />
         <Route path="/:ma" element={<TrangLop />} />
         <Route path="/:ma/gui-anh" element={<GuiAnh />} />
-        <Route path="/:ma/q/:chuongMa" element={<GuiAnhQr />} />
+        <Route path="/:ma/q/:chuongMa" element={<GuiAnh />} />
         <Route path="*" element={<SapCo tieuDe="Không tìm thấy trang" moTa="Đường dẫn này không tồn tại." />} />
       </Routes>
       </Suspense>
