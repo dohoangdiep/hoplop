@@ -1,4 +1,4 @@
-# hoplop: tiến độ và bàn giao (cập nhật 05/10/2026, tối)
+# hoplop: tiến độ và bàn giao (cập nhật 06/10/2026)
 
 Đây là file bàn giao để chuyển sang một cuộc trò chuyện mới. Đặc tả đầy đủ của sản phẩm nằm trong `CLAUDE.md` ở gốc kho; file này chỉ ghi **đã làm gì, đang ở đâu, việc tiếp theo**.
 
@@ -58,27 +58,49 @@ Quản trị hệ thống: user của chủ dự án đã được thêm vào b�
    - Các trang khác tách gói (`React.lazy`), trang chủ nạp ~64KB gzip thay vì ~175KB. Thêm thẻ OG cho trang chủ trong `index.html`.
 8. **Dữ liệu demo để thử:** nút "Nạp ảnh demo" vẽ ảnh hoạt hình trên trình duyệt (24 bạn mẫu, sơ đồ, ~14 ảnh xưa, chân dung, 2 buổi họp), chạy tiếp được từ chỗ dừng. Bật/tắt bằng `VITE_BAT_DEMO` trong `.env.production` (1 = bật, 0 = tắt). **Tắt trước khi bán cho khách.**
 
-## 5. Việc tiếp theo
+## 5. Quyết định ngày 06/10/2026: vai trò và hành trình (chưa làm)
 
-**Còn của Đợt 1:**
+Chi tiết trong `CLAUDE.md` mục 5 và 7. Tóm tắt những gì **thay đổi so với code hiện tại**:
+
+| Hiện tại | Đã chốt |
+|---|---|
+| Thành viên cần mã lớp + mật khẩu lớp | Vào bằng mã lớp là đủ. Vào bằng tên gọi, hoặc lớp bật "Luôn cần mật khẩu", mới hỏi mật khẩu |
+| Quản trị lớp đăng nhập email (bảng `quan_tri_lop`, chưa có giao diện mời) | Bỏ. Lớp trưởng đăng nhập **SĐT + PIN 6 số** ở `/lop-truong`. Tối đa 2 người/lớp, quyền như nhau. Chủ dịch vụ tạo tài khoản, sinh PIN, gửi qua Zalo |
+| Lớp trưởng chưa có giao diện riêng | Trang lớp trưởng trên điện thoại: duyệt ảnh, tạo buổi họp, lấy QR |
+| Danh sách lớp chỉ có tên | Hiện tên + SĐT lớp trưởng, nút Zalo, cột ảnh chờ duyệt; ô tìm theo SĐT / mã / tên lớp / trường |
+| Hai cửa gửi ảnh: "Gửi ảnh xưa" (chỉ kho ảnh xưa) và QR buổi họp (có hạn) | Một trang gửi ảnh chung, bước "Ảnh này chụp hồi nào?" gồm cả các buổi họp đã qua. QR chỉ chọn sẵn buổi; bỏ hạn QR |
+| Ảnh gửi qua QR khi chưa đăng nhập: chờ duyệt | Ảnh mọi thành viên gửi: chờ duyệt. Lớp trưởng và chủ dịch vụ: hiện ngay. Người gửi thấy ảnh mình đang chờ |
+| Màn hình "chưa có quyền" ở `/quan-tri` hiện câu SQL | Đổi thành lời nhắn thân thiện; `/quan-tri` chỉ dành cho chủ dịch vụ |
+| Trang chủ: ô Vào lớp | Giữ nguyên; giờ gõ mã lớp là vào thẳng, không hỏi mật khẩu |
+
+Không cần SMTP riêng gấp nữa, vì chỉ chủ dịch vụ đăng nhập bằng email.
+
+## 6. Việc tiếp theo
+
+**Đợt 1b, làm theo thứ tự (cần file SQL `0006_...`):**
+1. Bảng `lop_truong` + hàm đăng nhập SĐT/PIN (bcrypt, khóa 15 phút sau 5 lần sai); quản trị: thêm/xóa lớp trưởng, tạo PIN mới, tin nhắn Zalo soạn sẵn; danh sách lớp có SĐT, nút Zalo, ảnh chờ duyệt, ô tìm kiếm.
+2. `xem_lop`: vào bằng `ma` không cần mật khẩu; bằng `ten_goi` hoặc `luon_can_mat_khau` thì cần. Thêm cột `lop.luon_can_mat_khau`.
+3. Trang gửi ảnh chung với bước "chụp hồi nào"; `tao_luot_gui` nhận `p_chuong_id`; QR `/:ma/q/:maQr` chọn sẵn buổi; ảnh thành viên luôn `cho-duyet`, của lớp trưởng (kiểm SĐT+PIN) thì `da-duyet`; hiện "ảnh của bạn đang chờ duyệt".
+4. Trang lớp trưởng `/lop-truong` (điện thoại trước): duyệt/ẩn ảnh, đổi mục hoặc buổi, tạo/sửa buổi họp, tờ QR. Các hàm ghi đều kiểm SĐT+PIN phía máy chủ.
+
+**Còn lại của Đợt 1:**
 - Điền số Zalo, tên hộ kinh doanh, địa chỉ trong `src/data/trangChu.ts`; thêm cảm nhận thật khi có lớp đầu tiên. Trang Chính sách bảo mật / Điều khoản (chưa có, nên chưa đặt link).
 - Tắt `VITE_BAT_DEMO` khi thử xong; có thể thêm nút "Xóa dữ liệu demo".
-- Cấu hình SMTP riêng cho email đăng nhập (giới hạn gửi email mặc định của Supabase rất thấp).
+- (Không gấp) SMTP riêng cho email đăng nhập của chủ dịch vụ.
 
 **Đợt 2 (theo `CLAUDE.md` mục 9):**
 7. Hộp thư thời gian, Tái hiện (ảnh xưa – ảnh chụp lại cùng tư thế), Góc thầy cô
 8. Xuất zip toàn bộ ảnh gốc
 9. Ngày hết hạn, chế độ chỉ xem, nhắc gia hạn
 10. Tên miền riêng, OG tags cho bot (Cloudflare Pages Function)
-11. Quản trị lớp (ban liên lạc) tự tạo chương mới; phân quyền `quan_tri_lop`
 
 **Ghi chú kỹ thuật:**
 - Trong trang lớp, buổi họp hiện ở dòng thời gian khi ngày ≤ hôm nay **hoặc** đã có ảnh. Buổi tương lai chưa có ảnh chỉ hiện ở ô Sắp họp lớp.
 - Ảnh chân dung (`muc = 'chan-dung'`) không hiện trong kho ảnh xưa.
 - Đường dẫn ảnh: `lop/{lop_id}/{xua|chuong}/{anh_id}/{xem.jpg|goc.<đuôi>}`; bucket riêng tư, hiển thị bằng signed URL.
 
-## 6. Cách bắt đầu cuộc trò chuyện mới
+## 7. Cách bắt đầu cuộc trò chuyện mới
 
 Mở chat mới gắn với kho `dohoangdiep/hoplop`, rồi nhắn:
 
-> Đọc `CLAUDE.md` và `docs/TIEN_DO.md` rồi làm tiếp: [việc anh muốn làm, ví dụ "trang chủ bán hàng"].
+> Làm tiếp dự án ở kho https://github.com/dohoangdiep/hoplop. Đọc `CLAUDE.md` và `docs/TIEN_DO.md` trước, rồi làm tiếp: Đợt 1b (vai trò lớp trưởng và gửi ảnh chung).

@@ -15,7 +15,8 @@ Không phải công cụ tổ chức họp lớp: xác nhận tham dự và thu 
 - "Tái hiện": ảnh xưa và ảnh chụp lại cùng tư thế
 - Hộp thư thời gian: thư hẹn mở vào một lần họp sau
 - Góc thầy cô
-- QR tại buổi họp: khách quét để đẩy ảnh vào chương của năm đó, không cần cài app hay đăng nhập
+- Gửi ảnh cho lớp bất cứ lúc nào: ảnh thời đi học hoặc ảnh một lần họp lớp (kể cả buổi đã qua)
+- QR tại buổi họp: lối tắt vào trang gửi ảnh, chọn sẵn buổi họp đó, không cần cài app hay đăng nhập
 
 Mô hình kinh doanh: **làm hộ** (chủ dịch vụ dựng nội dung cho lớp). 1.500.000đ năm đầu, 500.000đ mỗi năm gia hạn. Ngừng gia hạn: trang chỉ xem trong 6 tháng, lớp tải được toàn bộ ảnh gốc (file zip), sau đó chuyển lưu trữ lạnh.
 
@@ -44,11 +45,12 @@ Biến môi trường: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (key
 | Đường dẫn | Trang |
 |---|---|
 | `/` | Trang chủ bán hàng (mockup `TrangChu.dc.html`) |
-| `/:ma` | Trang lớp. `ma` = mã ngắn 6 ký tự |
-| `/:ten_goi` | Tên gọi tùy chọn của lớp, trỏ về cùng lớp |
-| `/:ma/gui-anh` | Gửi ảnh xưa (mockup `GuiAnhXua.dc.html`) |
-| `/:ma/q/:chuong_ma` | Trang gửi ảnh qua QR tại buổi họp, tự gắn vào chương |
-| `/quan-tri` | Trang quản trị (quản trị lớp và quản trị hệ thống) |
+| `/:ma` | Trang lớp. `ma` = mã ngắn 6 ký tự. **Vào bằng mã lớp thì không cần mật khẩu** |
+| `/:ten_goi` | Tên gọi tùy chọn của lớp, trỏ về cùng lớp. **Vào bằng tên gọi thì phải nhập mật khẩu lớp** (tên gọi dễ đoán) |
+| `/:ma/gui-anh` | Gửi ảnh cho lớp (một trang chung cho ảnh xưa và ảnh các buổi họp; mockup `GuiAnhXua.dc.html`) |
+| `/:ma/q/:chuong_ma` | Lối tắt từ QR buổi họp: mở trang gửi ảnh với buổi họp đã chọn sẵn |
+| `/lop-truong` | Lớp trưởng đăng nhập bằng số điện thoại + mã PIN |
+| `/quan-tri` | Trang quản trị của chủ dịch vụ (đăng nhập email) |
 
 - **Mã lớp**: 6 ký tự ngẫu nhiên từ bảng `abcdefghjkmnpqrstuvwxyz23456789` (đã bỏ 0, o, 1, l, i). Không bao giờ đổi, vì QR đã in ra phải dùng được mãi.
 - **Tên gọi** (`ten_goi`): tùy chọn, duy nhất, chữ thường không dấu, số và dấu gạch. Đổi được; tên cũ nên tiếp tục chuyển hướng.
@@ -57,15 +59,26 @@ Biến môi trường: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (key
 - Trang lớp: `<meta name="robots" content="noindex">`. Trang chủ thì được index.
 - Thẻ Open Graph của trang lớp: tên lớp + trường + ảnh bìa, để chia sẻ qua Zalo hiện đẹp. (Vì là SPA, cần một Cloudflare Pages Function hoặc Worker chèn OG tags cho bot.)
 
-## 5. Ba vai người dùng
+## 5. Ba vai người dùng (đã chốt 06/10/2026)
 
-| Vai | Đăng nhập | Quyền |
-|---|---|---|
-| Thành viên | Không có tài khoản. Nhập **mật khẩu lớp** hoặc vào bằng QR/link có token | Xem trang, gửi ảnh (vào hàng chờ duyệt), viết thư hẹn giờ. Khi gửi chỉ nhập "Tên bạn" |
-| Quản trị lớp (1–3 người ban liên lạc) | Supabase Auth OTP qua email hoặc số điện thoại | Duyệt/ẩn ảnh, sửa thông tin lớp và sơ đồ, mở chương mới, lấy QR, đổi mật khẩu lớp |
-| Quản trị hệ thống (chủ dịch vụ) | Supabase Auth, cờ `la_quan_tri_he_thong` | Tất cả lớp: tạo lớp, dựng nội dung, gia hạn, gán tên miền |
+Với mô hình làm hộ, chủ dịch vụ dựng phần nặng (thành viên, sơ đồ, ảnh chân dung, giao diện). Lớp trưởng chỉ hơn thành viên ở **duyệt ảnh** và **tạo buổi họp**.
 
-Cơ chế vào lớp của thành viên (đã làm): hàm Postgres `xem_lop(p_khoa, p_mat_khau)` (security definer, migration 0002) kiểm tra bcrypt và trả về nội dung lớp dạng JSON; sai quá 10 lần/10 phút thì tạm khóa. Trình duyệt lưu mật khẩu trong localStorage để lần sau tự mở. Phần ghi (gửi ảnh qua QR) sẽ dùng hàm/Edge Function riêng kiểm tra mật khẩu hoặc `chuong.ma_qr`. Mọi đọc ghi dữ liệu lớp đi qua RLS hoặc Edge Function kiểm tra token đó. **Không để lộ dữ liệu lớp này cho token của lớp khác.**
+| | Thành viên | Lớp trưởng (tối đa 2 người: trưởng + phó, quyền như nhau) | Chủ dịch vụ (quản trị hệ thống) |
+|---|---|---|---|
+| Vào | Trang chủ gõ mã lớp, hoặc bấm link/QR. Không tài khoản | **SĐT + mã PIN 6 số** ở `/lop-truong` (không cần mã lớp; SĐT là lớp trưởng của 2 lớp thì cho chọn). Nhập một lần, máy nhớ | Email OTP ở `/quan-tri`, cờ trong bảng `quan_tri_he_thong` |
+| Xem trang lớp | Có | Có | Mọi lớp |
+| Gửi ảnh (chọn "chụp hồi nào") | Có, **vào hàng chờ duyệt** | Có, hiện ngay | Có, hiện ngay |
+| Duyệt / ẩn ảnh, xếp mục hoặc buổi | | Có | Có |
+| Tạo buổi họp, lấy QR | | Có | Có |
+| Thành viên, sơ đồ, giao diện, gia hạn, tài khoản lớp trưởng | | | Có |
+
+**Tài khoản lớp trưởng:** chủ dịch vụ tạo khi tạo lớp (họ tên + SĐT), hệ thống sinh PIN 6 số và soạn tin nhắn Zalo gửi riêng. Quên PIN hoặc đổi người: chủ dịch vụ tìm lớp theo SĐT rồi "Tạo PIN mới" / xóa người. Nhập sai PIN 5 lần thì khóa 15 phút. **Không dùng SĐT một mình làm thông tin đăng nhập** (cả lớp đều biết SĐT lớp trưởng). Không gửi SMS, không cần email cho lớp trưởng.
+
+**Số điện thoại lớp trưởng** là cách chủ dịch vụ nhận ra lớp khi hỗ trợ: danh sách lớp trong quản trị hiện tên + SĐT lớp trưởng, có nút mở Zalo, và ô tìm kiếm chung tìm theo SĐT (chuẩn hóa +84/0, dấu cách; tìm được bằng vài số cuối), mã lớp, tên lớp, trường. SĐT **không** hiện trên trang lớp.
+
+**Mật khẩu lớp:** chỉ cần khi vào bằng tên gọi, hoặc khi lớp bật công tắc "Luôn cần mật khẩu" (dùng khi mã lớp bị lộ ra ngoài, vì mã lớp không đổi được do QR đã in).
+
+Kỹ thuật: mọi đọc ghi của thành viên và lớp trưởng đi qua hàm Postgres `security definer` (như `xem_lop`) kiểm tra mã lớp / mật khẩu / SĐT + PIN (bcrypt) và giới hạn số lần sai. Trình duyệt lưu thông tin đã nhập trong localStorage. **Không để lộ dữ liệu lớp này cho người của lớp khác.**
 
 ## 6. Dữ liệu (Postgres)
 
@@ -89,6 +102,8 @@ tai_hien       id, lop_id, anh_xua_id, anh_nay_id, chu_thich
 thu_hen_gio    id, lop_id, nguoi_viet, noi_dung, mo_vao_chuong_id hoặc mo_vao_ngay, da_mo (bool)
 thay_co        id, lop_id, ho_ten, vai_tro, mon, cau_noi, anh_id
 ten_mien       hostname (unique), lop_id, het_han
+lop_truong     id, lop_id, ho_ten, sdt (chuẩn hóa dạng 0xxxxxxxxx), pin_hash, tao_luc   -- tối đa 2 mỗi lớp
+lop (thêm)     luon_can_mat_khau (bool, mặc định false)
 ```
 
 Bật RLS cho mọi bảng. Viết migration SQL trong `supabase/migrations/`.
@@ -99,7 +114,9 @@ Bật RLS cho mọi bảng. Viết migration SQL trong `supabase/migrations/`.
   - bản xem: cạnh dài ~1600px, ~300–500KB, dùng khi hiển thị
   - bản gốc: giữ nguyên, chỉ tải khi người dùng bấm "Tải ảnh gốc" hoặc xuất zip
 - Bucket **riêng tư**. Hiển thị qua signed URL có hạn.
-- Ảnh gửi lên luôn ở trạng thái `cho-duyet`; chỉ `da-duyet` mới hiện.
+- Ảnh thành viên gửi (kể cả qua QR) luôn ở trạng thái `cho-duyet`; chỉ `da-duyet` mới hiện. Ảnh lớp trưởng và chủ dịch vụ gửi được duyệt sẵn.
+- Một trang gửi ảnh chung: chọn ảnh → "Ảnh này chụp hồi nào?" (Thời đi học: Lớp 10/11/12, Cắm trại, Bế giảng, Khác · Các lần họp lớp: danh sách chương · Không nhớ rõ) → tên bạn → gửi. QR buổi họp chỉ chọn sẵn buổi đó; QR không cần hết hạn.
+- Người gửi thấy ảnh của mình đang chờ duyệt (lưu id ảnh trong localStorage) để không gửi lại.
 - Giới hạn: tối đa ~20 ảnh mỗi lần gửi, ~20MB mỗi ảnh; video giới hạn riêng.
 - Tải lên phải chịu được mạng 4G yếu ở nhà hàng: tải từng ảnh, có tiến độ, thử lại khi lỗi.
 - Đường dẫn lưu trữ: `lop/{lop_id}/{loai}/{anh_id}/{goc|xem}.jpg`.
@@ -123,12 +140,18 @@ Bật RLS cho mọi bảng. Viết migration SQL trong `supabase/migrations/`.
 5. Quản trị: danh sách lớp, tạo lớp mới (tự sinh mã, mật khẩu, QR), nhập thành viên, nhập sơ đồ chỗ ngồi, duyệt và xếp ảnh vào mục, tạo chương, chọn giao diện
 6. Trang chủ bán hàng `/` với ô "Vào lớp của bạn" và lớp mẫu công khai (không mật khẩu)
 
+**Đợt 1b – vai trò đã chốt 06/10 (làm trước trang chủ):**
+- Tài khoản lớp trưởng (SĐT + PIN), tìm lớp theo SĐT, cột "ảnh chờ duyệt" trong danh sách lớp
+- Vào lớp chỉ bằng mã lớp; tên gọi và công tắc "Luôn cần mật khẩu" mới hỏi mật khẩu
+- Trang gửi ảnh chung có bước "chụp hồi nào"; ảnh thành viên chờ duyệt
+- Trang lớp trưởng trên điện thoại: duyệt ảnh, tạo buổi họp, lấy QR
+
 **Đợt 2:**
 7. Hộp thư thời gian, tái hiện, góc thầy cô
 8. Xuất zip toàn bộ ảnh gốc
 9. Ngày hết hạn, chế độ chỉ xem, nhắc gia hạn
 10. Tên miền riêng, OG tags cho bot
-11. Quản trị lớp tự tạo chương mới
+11. (Đã chuyển lên Đợt 1b: lớp trưởng tạo buổi họp)
 
 ## 10. Quy ước
 
