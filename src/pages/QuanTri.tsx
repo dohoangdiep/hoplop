@@ -12,6 +12,7 @@ import { hienSdt } from '../lib/lopTruong'
 import { DANH_SACH_GIAO_DIEN, GIAO_DIEN, type MaGiaoDien } from '../themes'
 import { QuanLyThanhVien, SuaSoDo, QuanLyAnh, QuanLyChuong, QuanLyThu, NutNapDemo, NutXoaDemo, BAT_DEMO } from './QuanTriLop'
 import type { ThanhVienQT, ChuongQT } from '../lib/quanTri'
+import { QuanLyTaiHien, QuanLyThayCo } from './QuanTriThem'
 import '../styles/quantri.css'
 
 const TRANG_THAI: Record<string, string> = {
@@ -476,7 +477,9 @@ function ChiTietLop() {
       <SuaSoDo lopId={lop.id} thanhVien={thanhVien} />
       <QuanLyChuong lopId={lop.id} maLop={lop.ma} tenLop={lop.ten_lop} truong={lop.truong} onDoi={setChuong} />
       <QuanLyAnh lopId={lop.id} maLop={lop.ma} thanhVien={thanhVien} chuong={chuong} />
+      <QuanLyTaiHien lopId={lop.id} lopMa={lop.ma} />
       <QuanLyThu lopId={lop.id} chuong={chuong} />
+      <QuanLyThayCo lopId={lop.id} lopMa={lop.ma} />
 
       <section className="qt-muc">
         <h2>Dữ liệu demo</h2>

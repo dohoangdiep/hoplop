@@ -36,7 +36,8 @@
 | `0004_muc_chan_dung.sql` | Thêm mục ảnh `chan-dung` | Đã chạy (lỗi demo "Không kết nối được" trước đây là do thiếu file này) |
 | `0005_chuong.sql` | `thong_tin_qr`, `xem_lop` trả thêm mô tả, video, ảnh tập thể từng buổi | Đã chạy (chủ dự án đã thử chương và ảnh chương) |
 | `0006_lop_truong_gui_anh_chung.sql` | Đợt 1b: lớp trưởng (SĐT + PIN), vào lớp bằng mã, trang gửi ảnh chung, công tắc "Luôn cần mật khẩu" | Đã chạy (06/10) |
-| `0007_hop_thu_ten_goi.sql` | Hộp thư thời gian (`thu_cua_lop`, `viet_thu`), đổi tên gọi (`qt_dat_ten_goi`, bảng `ten_goi_cu`, `dia_chi_moi`) | **Chưa chạy.** Thiếu thì Hộp thư hiện trống và báo lỗi khi gửi thư; ô Tên gọi báo cần chạy 0007 |
+| `0007_hop_thu_ten_goi.sql` | Hộp thư thời gian (`thu_cua_lop`, `viet_thu`), đổi tên gọi (`qt_dat_ten_goi`, bảng `ten_goi_cu`, `dia_chi_moi`) | Chạy chưa? (chủ dự án xác nhận) |
+| `0008_tai_hien_thay_co.sql` | Tái hiện + Góc thầy cô: thêm cột năm/thứ tự, hàm `xem_lop_them` cho trang lớp | **Chưa chạy.** Thiếu thì hai mục này không hiện trên trang lớp; quản trị báo cần chạy 0008 |
 
 Quản trị hệ thống: user của chủ dự án đã được thêm vào bảng `quan_tri_he_thong`.
 
@@ -117,18 +118,26 @@ Theo `CLAUDE.md` mục 5 và 7. **Cần chạy `0006_lop_truong_gui_anh_chung.sq
 - Trang chủ: điền tên **Công ty Cổ phần Phần mềm NEO**, địa chỉ **31LK6A Làng Việt Kiều Châu Âu, Hà Nội**. Câu "riêng tư" đổi cho đúng cách vào lớp mới.
 - Đã thử: 0001→0007 trên Postgres cục bộ; bộ thử đầu-cuối 31 bước trên bản build (điện thoại 390px) đều đạt.
 
+## 5c. Tái hiện và Góc thầy cô (06/10, tối)
+
+- **Trang lớp** (sau "Năm nay – năm ngoái"): **Tái hiện** ("Chụp lại y như hồi ấy": ảnh xưa – ảnh nay đặt cạnh nhau, năm bên dưới, vài dòng kể, bấm để xem lớn) → Hộp thư thời gian → **Góc thầy cô** ("Những người đưa đò": ảnh, tên, "Chủ nhiệm · dạy Văn", câu thầy cô hay nói). Mục nào chưa có nội dung thì tự ẩn.
+- Chỉ hiện cặp Tái hiện khi **cả hai** ảnh đã duyệt; ảnh thầy cô chưa duyệt thì hiện khung trống. Đọc qua hàm `xem_lop_them` (cùng quy tắc vào lớp như `xem_lop`).
+- **Quản trị → trang lớp**: mục **Tái hiện** (thêm cặp: mỗi ảnh chọn trong kho của lớp hoặc tải ảnh mới; năm xưa, năm nay, vài dòng kể; sửa, xóa) và **Góc thầy cô** (họ tên kèm Thầy/Cô, vai trò, môn, câu nói, ảnh; sửa, xóa). Ảnh chọn ở đây tự được duyệt. Ảnh tải mới ở hai mục này lưu mục `chan-dung` nên không lẫn vào kho ảnh xưa.
+- Lớp mẫu `/xemmau` có 1 cặp Tái hiện và 2 thầy cô mẫu (khung ảnh trống, tên để `[...]`).
+- Bộ thử đầu-cuối: 35/35 bước đạt. Phần quản trị của hai mục này chưa thử tự động (cần đăng nhập email); chủ dự án thử tay.
+
 ## 6. Việc tiếp theo
 
 **Còn lại của Đợt 1:**
 - Chạy `0006` và thử theo các bước trên; gửi ảnh chụp màn hình nếu có chỗ lạ.
-- Chạy `0007`, thử Hộp thư thời gian và đổi tên gọi.
+- Chạy `0007` (nếu chưa) và `0008`; thử Hộp thư, đổi tên gọi, Tái hiện, Góc thầy cô.
 - **Còn thiếu số Zalo** nhận đặt trang (`src/data/trangChu.ts`, mục `zalo`); thêm cảm nhận thật khi có lớp đầu tiên. Trang Chính sách bảo mật / Điều khoản (chưa có, nên chưa đặt link).
 - Tắt `VITE_BAT_DEMO` khi thử xong, rồi bấm "Xóa dữ liệu demo" ở từng lớp thử.
 - (Không gấp) Lớp trưởng ẩn thư không phù hợp ngay trên điện thoại (hiện chỉ quản trị làm được).
 - (Không gấp) SMTP riêng cho email đăng nhập của chủ dịch vụ.
 
 **Đợt 2 (theo `CLAUDE.md` mục 9):**
-7. ~~Hộp thư thời gian~~ (đã làm), Tái hiện (ảnh xưa – ảnh chụp lại cùng tư thế), Góc thầy cô
+7. ~~Hộp thư thời gian, Tái hiện, Góc thầy cô~~ (đã làm)
 8. Xuất zip toàn bộ ảnh gốc
 9. Ngày hết hạn, chế độ chỉ xem, nhắc gia hạn
 10. Tên miền riêng, OG tags cho bot (Cloudflare Pages Function)

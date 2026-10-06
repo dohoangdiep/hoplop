@@ -1,4 +1,5 @@
 import type { LaThu } from '../lib/thu'
+import type { TaiHien, ThayCo } from '../lib/types'
 import type { Lop, ThanhVien, ChoNgoi } from '../lib/types'
 
 /** Lớp mẫu công khai để khách xem thử. Dữ liệu giả, không phải người thật. */
@@ -93,4 +94,14 @@ export const THU_MAU: LaThu[] = [
   { id: 't3', nguoiViet: 'Mai Mực', taoLuc: '2026-02-20', ngayMo: '2027-02-10', buoi: 'Họp lớp 21 năm · Mùng 4 Tết', daMo: false, noiDung: null },
   { id: 't4', nguoiViet: 'Nam Toán', taoLuc: '2026-02-20', ngayMo: '2027-02-10', buoi: 'Họp lớp 21 năm · Mùng 4 Tết', daMo: false, noiDung: null },
   { id: 't5', nguoiViet: 'Hà Kều', taoLuc: '2026-02-21', ngayMo: '2031-02-20', buoi: null, daMo: false, noiDung: null },
+]
+
+/** Tái hiện và Góc thầy cô của lớp mẫu (nội dung minh họa, khung ảnh để trống) */
+export const TAI_HIEN_MAU: TaiHien[] = [
+  { id: 'th1', namXua: 2005, namNay: 2026, nhanXua: '[Cắm trại Ba Vì]', nhanNay: '[Cùng tư thế]',
+    chuThich: 'Sáu bạn nam xếp hình tháp người, 21 năm sau vẫn đủ người, chỉ là tháp thấp hơn một chút.' },
+]
+export const THAY_CO_MAU: ThayCo[] = [
+  { id: 'tc1', hoTen: 'Cô [Họ tên cô chủ nhiệm]', vaiTro: 'Chủ nhiệm', mon: 'Văn', cauNoi: 'Các em cứ đi xa, nhưng nhớ đường về lớp.' },
+  { id: 'tc2', hoTen: 'Thầy [Họ tên thầy dạy Toán]', mon: 'Toán', cauNoi: 'Bài khó thì làm từng bước một.' },
 ]

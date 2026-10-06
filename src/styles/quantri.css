@@ -110,3 +110,13 @@
 .qt-dong-zalo { padding: 0 16px 14px; }
 .qt-huy-hieu { font-size: 12px; font-weight: 600; color: #8A3A00; background: #FFE9C7; border-radius: 999px; padding: 2px 10px; }
 .qt-tin-nhan { white-space: pre-wrap; background: #fff; border: 1px solid #ECE6DA; border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 14px; margin: 0; }
+
+/* Tái hiện, Góc thầy cô: ô chọn ảnh */
+.qt-o-chon-anh { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.qt-xem-anh-chon { aspect-ratio: 4 / 5; width: 100%; max-width: 180px; border: 1.5px dashed #C9BFAE; border-radius: 10px; background: #FBF8F2;
+  display: flex; align-items: center; justify-content: center; overflow: hidden; color: #5C5873; font-size: 13px; }
+.qt-xem-anh-chon img { width: 100%; height: 100%; object-fit: cover; }
+.qt-cap-anh { display: flex; gap: 10px; }
+.qt-cap-anh figure { margin: 0; width: 110px; display: flex; flex-direction: column; gap: 4px; }
+.qt-cap-anh figcaption { font-size: 13px; font-weight: 600; text-align: center; }
+.qt-the .qt-luoi-anh .qt-o-anh { width: auto; height: auto; }

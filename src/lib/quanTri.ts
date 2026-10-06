@@ -449,3 +449,89 @@ export async function xoaThu(id: string) {
   const { error } = await supabase.from('thu_hen_gio').delete().eq('id', id)
   if (error) throw error
 }
+
+/* ---------------- Ảnh riêng cho Tái hiện / thầy cô ---------------- */
+/**
+ * Tải một ảnh lên làm ảnh riêng (không hiện trong kho ảnh xưa): dùng mục 'chan-dung' như ảnh
+ * ngày ấy – bây giờ của từng bạn. Ảnh quản trị tải lên được duyệt sẵn. Trả về id ảnh.
+ */
+export async function taiAnhRieng(lopMa: string, file: File, chuThich: string): Promise<string> {
+  const r = await guiAnh([file], { khoa: lopMa, muc: 'chan-dung', nguoiGui: 'Ban liên lạc', chuThich }, () => {})
+  if (r.loi) throw new Error(r.loi)
+  if (!r.ids[0]) throw new Error('Tải ảnh không thành công, bạn thử lại nhé.')
+  return r.ids[0]
+}
+
+/** Map anh_id -> link xem, cho một danh sách id ảnh */
+export async function linkTheoId(ids: (string | null | undefined)[]): Promise<Record<string, string>> {
+  const ds = [...new Set(ids.filter((x): x is string => !!x))]
+  if (!ds.length) return {}
+  const { data } = await supabase.from('anh').select('id, duong_dan_xem').in('id', ds)
+  const link = await linkXemNhieu((data ?? []).map((a) => a.duong_dan_xem))
+  return Object.fromEntries((data ?? []).map((a) => [a.id, link[a.duong_dan_xem]]).filter(([, u]) => u))
+}
+
+/* ---------------- Tái hiện ---------------- */
+export interface TaiHienQT {
+  id: string
+  anh_xua_id: string | null
+  anh_nay_id: string | null
+  chu_thich: string | null
+  nam_xua: number | null
+  nam_nay: number | null
+  thu_tu: number
+}
+
+export async function dsTaiHienQT(lopId: string): Promise<TaiHienQT[]> {
+  const { data, error } = await supabase.from('tai_hien')
+    .select('id, anh_xua_id, anh_nay_id, chu_thich, nam_xua, nam_nay, thu_tu')
+    .eq('lop_id', lopId).order('thu_tu').order('tao_luc')
+  if (error) throw new Error(error.code === '42703' ? 'Cần chạy file SQL 0008 trước.' : error.message)
+  return (data ?? []) as TaiHienQT[]
+}
+
+export async function luuTaiHien(lopId: string, id: string | null, c: Omit<TaiHienQT, 'id' | 'thu_tu'>) {
+  // Ảnh dùng cho Tái hiện phải được duyệt mới hiện trên trang lớp
+  const anh = [c.anh_xua_id, c.anh_nay_id].filter((x): x is string => !!x)
+  if (anh.length) await capNhatNhieuAnh(anh, { trang_thai: 'da-duyet' })
+  const { error } = id
+    ? await supabase.from('tai_hien').update(c).eq('id', id)
+    : await supabase.from('tai_hien').insert({ ...c, lop_id: lopId })
+  if (error) throw error
+}
+
+export async function xoaTaiHien(id: string) {
+  const { error } = await supabase.from('tai_hien').delete().eq('id', id)
+  if (error) throw error
+}
+
+/* ---------------- Góc thầy cô ---------------- */
+export interface ThayCoQT {
+  id: string
+  ho_ten: string
+  vai_tro: string | null
+  mon: string | null
+  cau_noi: string | null
+  anh_id: string | null
+  thu_tu: number
+}
+
+export async function dsThayCoQT(lopId: string): Promise<ThayCoQT[]> {
+  const { data, error } = await supabase.from('thay_co')
+    .select('id, ho_ten, vai_tro, mon, cau_noi, anh_id, thu_tu').eq('lop_id', lopId).order('thu_tu').order('ho_ten')
+  if (error) throw new Error(error.code === '42703' ? 'Cần chạy file SQL 0008 trước.' : error.message)
+  return (data ?? []) as ThayCoQT[]
+}
+
+export async function luuThayCo(lopId: string, id: string | null, c: Omit<ThayCoQT, 'id'>) {
+  if (c.anh_id) await capNhatAnh(c.anh_id, { trang_thai: 'da-duyet' })
+  const { error } = id
+    ? await supabase.from('thay_co').update(c).eq('id', id)
+    : await supabase.from('thay_co').insert({ ...c, lop_id: lopId })
+  if (error) throw error
+}
+
+export async function xoaThayCo(id: string) {
+  const { error } = await supabase.from('thay_co').delete().eq('id', id)
+  if (error) throw error
+}

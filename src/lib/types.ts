@@ -59,3 +59,26 @@ export interface Lop {
   /** Chỉ có khi người xem là lớp trưởng hoặc chủ dịch vụ */
   soChoDuyet?: number
 }
+
+/** Một cặp Tái hiện: ảnh xưa và ảnh chụp lại cùng tư thế */
+export interface TaiHien {
+  id: string
+  chuThich: string
+  namXua?: number
+  namNay?: number
+  xuaUrl?: string
+  nayUrl?: string
+  /** Lớp mẫu: chữ hiện trong khung khi chưa có ảnh */
+  nhanXua?: string
+  nhanNay?: string
+}
+
+/** Một thầy/cô trong Góc thầy cô */
+export interface ThayCo {
+  id: string
+  hoTen: string
+  vaiTro?: string
+  mon?: string
+  cauNoi?: string
+  anhUrl?: string
+}

@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom'
-import { moLop, type KetQuaMoLop } from '../lib/lop'
+import { moLop, napNoiDungThem, type KetQuaMoLop } from '../lib/lop'
+import type { TaiHien as TaiHienT, ThayCo } from '../lib/types'
+import { TaiHien, GocThayCo } from '../components/KhoiThem'
 import { bienCss, layGiaoDien, napFont, DANH_SACH_GIAO_DIEN, GIAO_DIEN, type MaGiaoDien } from '../themes'
 import { Bia, SapHopLop, SoDoChoNgoi, KhoAnhXua, DongThoiGian, NamNayNamNgoai } from '../components/KhoiTrangLop'
-import { MA_LOP_MAU } from '../data/lopMau'
+import { MA_LOP_MAU, TAI_HIEN_MAU, THAY_CO_MAU } from '../data/lopMau'
 import { HopThu } from '../components/HopThu'
 import { supabase } from '../lib/supabase'
 import '../styles/lop.css'
@@ -44,6 +46,7 @@ export default function TrangLop() {
   const [kq, setKq] = useState<KetQuaMoLop | undefined>(undefined)
   const [dangMo, setDangMo] = useState(false)
   const dieuHuong = useNavigate()
+  const [them, setThem] = useState<{ taiHien: TaiHienT[]; thayCo: ThayCo[] }>({ taiHien: [], thayCo: [] })
   useNoIndex()
 
   useEffect(() => {
@@ -66,6 +69,16 @@ export default function TrangLop() {
     setKq(await moLop(ma, mk))
     setDangMo(false)
   }
+
+  // Tái hiện, Góc thầy cô: nạp sau khi đã vào được lớp
+  const daVao = kq?.trangThai === 'ok'
+  useEffect(() => {
+    if (!daVao) return
+    if (ma.toLowerCase() === MA_LOP_MAU) { setThem({ taiHien: TAI_HIEN_MAU, thayCo: THAY_CO_MAU }); return }
+    let huy = false
+    napNoiDungThem(ma).then((r) => { if (!huy) setThem(r) })
+    return () => { huy = true }
+  }, [daVao, ma])
 
   const lop = kq?.trangThai === 'ok' ? kq.lop : kq?.trangThai === 'can-mat-khau' ? kq.xemTruoc : null
   const laLopMau = lop?.ma === MA_LOP_MAU
@@ -137,7 +150,9 @@ export default function TrangLop() {
           <KhoAnhXua lop={lop} />
           <DongThoiGian lop={lop} />
           <NamNayNamNgoai lop={lop} />
+          <TaiHien ds={them.taiHien} />
           <HopThu lop={lop} khoa={ma} laLopMau={laLopMau} />
+          <GocThayCo ds={them.thayCo} />
         </>
       )}
       <footer className="chan-trang khung">

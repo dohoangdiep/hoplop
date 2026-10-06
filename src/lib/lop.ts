@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { Lop } from './types'
+import type { Lop, TaiHien, ThayCo } from './types'
 import type { MaGiaoDien } from '../themes'
 import { LOP_MAU, MA_LOP_MAU } from '../data/lopMau'
 import { linkXemNhieu } from './storage'
@@ -128,5 +128,32 @@ async function ganAnh(lop: Lop, d: any): Promise<Lop> {
         anh: album.map((a) => ({ id: a.id, chuThich: a.chu_thich ?? '', url: url[a.xem] })),
       }
     }),
+  }
+}
+
+/**
+ * Nội dung thêm của trang lớp (Tái hiện, Góc thầy cô), nạp sau khi đã mở được lớp.
+ * Trả rỗng nếu chưa chạy file SQL 0008 hoặc không đọc được.
+ */
+export async function napNoiDungThem(khoa: string): Promise<{ taiHien: TaiHien[]; thayCo: ThayCo[] }> {
+  const rong = { taiHien: [], thayCo: [] }
+  const { data, error } = await supabase.rpc('xem_lop_them', {
+    p_khoa: khoa.toLowerCase(), p_mat_khau: matKhauDaLuu(khoa), p_token: tokenLopTruong(),
+  })
+  if (error || !data || data.loi) return rong
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const th: any[] = data.tai_hien ?? []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tc: any[] = data.thay_co ?? []
+  const url = await linkXemNhieu([...th.flatMap((t) => [t.xua, t.nay]), ...tc.map((c) => c.anh)])
+  return {
+    taiHien: th.map((t) => ({
+      id: t.id, chuThich: t.chu_thich ?? '', namXua: t.nam_xua ?? undefined, namNay: t.nam_nay ?? undefined,
+      xuaUrl: url[t.xua], nayUrl: url[t.nay],
+    })),
+    thayCo: tc.map((c) => ({
+      id: c.id, hoTen: c.ho_ten, vaiTro: c.vai_tro ?? undefined, mon: c.mon ?? undefined,
+      cauNoi: c.cau_noi ?? undefined, anhUrl: c.anh ? url[c.anh] : undefined,
+    })),
   }
 }

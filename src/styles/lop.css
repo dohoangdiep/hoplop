@@ -220,3 +220,20 @@
 .viet-thu { padding: 18px; display: flex; flex-direction: column; gap: 10px; }
 .hang-nut-thu { display: flex; gap: 8px; }
 .nut.nut-phu { flex: 0 0 auto; padding: 0 20px; background: var(--mau-card); color: var(--mau-primary); border: 1px solid var(--mau-line); }
+
+/* ---------- Tái hiện ---------- */
+.cap-tai-hien { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.hai-anh-tai-hien { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.hai-anh-tai-hien > div { display: flex; flex-direction: column; gap: 4px; }
+.anh-tai-hien { aspect-ratio: 4 / 5; height: auto; }
+.nam-tai-hien { font-family: var(--font-display); font-weight: var(--font-display-weight); color: var(--mau-primary); font-size: 18px; text-align: center; }
+.cap-tai-hien figcaption { font-size: 14px; line-height: 1.5; color: var(--mau-ink); }
+
+/* ---------- Góc thầy cô ---------- */
+.ds-thay-co { display: flex; flex-direction: column; gap: 12px; }
+.the-thay-co { padding: 14px; display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 14px; align-items: start; }
+.anh-thay-co { width: 88px; height: 108px; padding: 0; overflow: hidden; }
+.tt-thay-co { display: flex; flex-direction: column; gap: 4px; }
+.tt-thay-co strong { font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: 19px; line-height: 1.2; }
+.tt-thay-co .chu-mo { font-size: 13px; }
+.cau-thay-co { margin: 4px 0 0; font-family: var(--font-hand); font-style: var(--font-hand-style); font-size: 19px; line-height: 1.4; color: var(--mau-primary); }
