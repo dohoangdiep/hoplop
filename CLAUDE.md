@@ -50,7 +50,9 @@ Biến môi trường: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (key
 | `/:ma/gui-anh` | Gửi ảnh cho lớp (một trang chung cho ảnh xưa và ảnh các buổi họp; mockup `GuiAnhXua.dc.html`) |
 | `/:ma/q/:chuong_ma` | Lối tắt từ QR buổi họp: mở trang gửi ảnh với buổi họp đã chọn sẵn |
 | `/lop-truong` | Lớp trưởng đăng nhập bằng số điện thoại + mã PIN |
-| `/quan-tri` | Trang quản trị của chủ dịch vụ (đăng nhập email) |
+| `/quan-tri` | Quản trị chung của chủ dịch vụ (đăng nhập email): danh sách lớp, tìm, lọc, tạo lớp, hạn dùng, trạng thái, ẩn, xóa hẳn |
+| `/quan-tri/tao-lop` | Tạo lớp (cấp học, hạn dùng, giao diện, lớp trưởng) |
+| `/quan-tri/lop/:id/:tab` | Quản trị một lớp, chia tab: `tong-quan`, `thanh-vien`, `anh`, `buoi-hop`, `tai-hien`, `cai-dat` |
 
 - **Mã lớp**: 6 ký tự ngẫu nhiên từ bảng `abcdefghjkmnpqrstuvwxyz23456789` (đã bỏ 0, o, 1, l, i). Không bao giờ đổi, vì QR đã in ra phải dùng được mãi.
 - **Tên gọi** (`ten_goi`): tùy chọn, duy nhất, chữ thường không dấu, số và dấu gạch. Đổi được; tên cũ nên tiếp tục chuyển hướng.

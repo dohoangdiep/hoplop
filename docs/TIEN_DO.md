@@ -15,7 +15,10 @@
 
 **Bảo mật, luôn tuân thủ:** không bao giờ hỏi xin hay đưa vào kho mật khẩu database, secret key `sb_secret_...` / service_role, hay mật khẩu tài khoản Supabase. Mọi thay đổi database do chủ dự án tự dán file SQL vào Supabase → SQL Editor.
 
-**Môi trường làm việc của Claude:** không truy cập được pages.dev hay supabase.co, nên không thử được với dữ liệu thật. Kiểm tra bằng `npm run build` và xem trước lớp mẫu `/xemmau` bằng `vite preview`; phần dữ liệu thật do chủ dự án thử rồi gửi ảnh chụp màn hình.
+**Môi trường làm việc của Claude:** không truy cập được pages.dev hay supabase.co. Thay vào đó có **môi trường thử cục bộ giống Supabase** (từ 07/10): `bash scripts/thu/dung_moi_truong.sh` dựng Postgres 16 + PostgREST 12 và chạy mọi file SQL; rồi `npm run build` và
+- `python3 scripts/thu/thu_trang_lop.py`: trang lớp, gửi ảnh, QR, lớp trưởng (38 bước)
+- `python3 scripts/thu/thu_quan_tri.py`: trang quản trị với phiên đăng nhập email giả lập (30 bước, cả máy tính và điện thoại)
+Ảnh chụp màn hình ở `/tmp/hoplop-thu-anh`. Storage được giả lập trong bộ nhớ; chủ dự án vẫn nên thử lại trên Supabase thật.
 
 **Commit:** `git -c user.name="dohoangdiep" -c user.email="dohoangdiep@gmail.com" commit ...`, kèm dòng `Co-Authored-By` theo quy định của phiên. Chủ dự án đồng ý cho đẩy thẳng lên `main` sau mỗi phần việc.
 
@@ -142,6 +145,15 @@ Theo `CLAUDE.md` mục 5 và 7. **Cần chạy `0006_lop_truong_gui_anh_chung.sq
 - **Hộp thư thời gian tạm tắt** (chủ dự án: viết xong để lâu dễ quên). Công tắc `BAT_HOP_THU` trong `src/data/tinhNang.ts`: ẩn khỏi trang lớp, trang chủ (danh sách tính năng, câu giới thiệu, quyền lợi gia hạn) và quản trị. Nút "Viết thư cho lớp" ở ô Sắp họp lớp đổi thành "Gửi ảnh buổi này". Code, SQL 0007 và thư đã viết giữ nguyên; bật lại = đổi `false` thành `true`.
 - **Cấp học**: tạo lớp chọn Tiểu học / THCS / THPT / Đại học, cao đẳng (sửa được ở trang lớp trong quản trị). Mục ảnh xưa hiện theo cấp ở mọi nơi: trang gửi ảnh, kho ảnh xưa trên trang lớp, ô xếp ảnh của lớp trưởng và quản trị. Lớp cũ mặc định THPT. Đại học: "Bế giảng" hiện thành "Lễ tốt nghiệp". Đổi cấp sau khi đã có ảnh: ảnh ở mục cũ vẫn hiện, xếp lại được. Máy chủ kiểm mục theo cấp (`muc_cua_cap`): gửi mục không thuộc cấp thì vào "Khác".
 - Bộ thử đầu-cuối: 38/38 bước đạt (thêm: thư đã ẩn, lớp trưởng xóa hẳn ảnh, mục theo cấp tiểu học và đại học).
+
+## 5f. Thiết kế lại trang quản trị (07/10)
+
+Tách rõ hai tầng (không cần file SQL mới):
+- **Quản trị chung** `/quan-tri` (`src/pages/qt/DanhSachLop.tsx`): thanh trên cùng có menu Các lớp / Tạo lớp. 5 ô số liệu kiêm bộ lọc (Đang hoạt động, Có ảnh chờ duyệt, Sắp hết hạn ≤30 ngày, Đã hết hạn, Đã ẩn); ô tìm (SĐT, mã, tên lớp, trường, không dấu; khi tìm thì tìm cả lớp đã ẩn); sắp xếp (mới tạo, hạn gần nhất, nhiều ảnh chờ, tên). Mỗi dòng: lớp, lớp trưởng + Zalo, nhãn trạng thái + hạn dùng, nút **Quản lý** và **Hạn & trạng thái**. Bảng "Hạn & trạng thái": Gia hạn 1 năm / +6 tháng (tính từ hạn hiện tại, hoặc từ hôm nay nếu đã quá hạn; đang "Chỉ xem" thì tự mở lại thành "Đã bàn giao"), chọn ngày, bỏ hạn; đổi trạng thái; **Ẩn lớp** (= trạng thái lưu trữ, trang lớp báo không tìm thấy) / **Hiện lại**; **Xóa hẳn** (gõ đúng mã lớp mới bấm được; xóa file ảnh trên kho rồi xóa lớp).
+- **Tạo lớp** `/quan-tri/tao-lop` (`qt/TaoLop.tsx`): thêm ô **Hạn dùng**, mặc định 1 năm kể từ hôm nay. Xong thì dẫn thẳng vào tab Thành viên của lớp mới.
+- **Quản trị một lớp** `/quan-tri/lop/:id/:tab` (`qt/MotLop.tsx`): đầu trang (đường dẫn, tên lớp, mã, nhãn trạng thái + hạn, nút Mở trang lớp) và các tab: **Tổng quan** (tiến độ dựng trang: số thành viên, số bạn đủ ảnh ngày ấy – bây giờ, ảnh bìa, ảnh chờ duyệt, buổi họp; link + QR vào lớp; lớp trưởng) · **Thành viên & sơ đồ** · **Ảnh** (số ảnh chờ hiện trên tab) · **Buổi họp** · **Tái hiện & thầy cô** · **Cài đặt** (sửa tên lớp, trường, tỉnh, niên khóa, **ghi chú nội bộ**; cấp học; giao diện; tên gọi; mật khẩu; dữ liệu demo). Tải lại trang giữ đúng tab.
+- Thành phần dùng chung trong `qt/chung.tsx`; `QuanTri.tsx` chỉ còn khung (đăng nhập, thanh trên, định tuyến). `quantri.css` viết lại theo biến màu `--qt-*`.
+- Chưa tự động: hết hạn chưa tự chuyển lớp sang "Chỉ xem" (nằm trong việc 9 của Đợt 2); hiện chỉ hiện nhãn "Hết hạn" và ô lọc.
 
 ## 6. Việc tiếp theo
 

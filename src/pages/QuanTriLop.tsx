@@ -391,7 +391,11 @@ const TAB_ANH: { ma: AnhQT['trang_thai']; ten: string }[] = [
   { ma: 'an', ten: 'Đã ẩn' },
 ]
 
-export function QuanLyAnh({ lopId, maLop, thanhVien, chuong = [], cap }: { lopId: string; maLop: string; thanhVien: ThanhVienQT[]; chuong?: ChuongQT[]; cap?: CapHoc }) {
+export function QuanLyAnh({ lopId, maLop, thanhVien, chuong = [], cap, onDoi }: {
+  lopId: string; maLop: string; thanhVien: ThanhVienQT[]; chuong?: ChuongQT[]; cap?: CapHoc
+  /** Gọi sau mỗi lần tải lại danh sách ảnh (vd để cập nhật số ảnh chờ duyệt) */
+  onDoi?: () => void
+}) {
   const [thuoc, setThuoc] = useState('tat-ca')
   const [ds, setDs] = useState<AnhQT[] | null>(null)
   const [url, setUrl] = useState<Record<string, string>>({})
@@ -403,6 +407,7 @@ export function QuanLyAnh({ lopId, maLop, thanhVien, chuong = [], cap }: { lopId
     try {
       const d = await dsAnh(lopId)
       setDs(d)
+      onDoi?.()
       setUrl(await linkXemNhieu(d.map((a) => a.duong_dan_xem)))
     } catch (e) { setLoi((e as Error).message) }
   }

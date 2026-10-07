@@ -19,6 +19,8 @@ export interface LopQuanTri {
   het_han: string | null
   tao_luc: string
   luon_can_mat_khau: boolean
+  anh_bia_id?: string | null
+  ghi_chu_noi_bo?: string | null
   /** Cấp học (thiếu = THPT, vd danh sách lớp không trả cột này) */
   cap?: CapHoc
 }
@@ -77,7 +79,7 @@ export function locLop(ds: LopDanhSach[], tuKhoa: string): LopDanhSach[] {
 export async function layLop(id: string): Promise<LopQuanTri | null> {
   const { data, error } = await supabase
     .from('lop')
-    .select('id, ma, ten_goi, ten_lop, truong, tinh, nien_khoa_bat_dau, nien_khoa_ket_thuc, giao_dien, trang_thai, het_han, tao_luc, luon_can_mat_khau, cap')
+    .select('id, ma, ten_goi, ten_lop, truong, tinh, nien_khoa_bat_dau, nien_khoa_ket_thuc, giao_dien, trang_thai, het_han, tao_luc, luon_can_mat_khau, cap, anh_bia_id, ghi_chu_noi_bo')
     .eq('id', id)
     .maybeSingle()
   if (error) throw error
@@ -92,6 +94,8 @@ export interface ThongTinLopMoi {
   nienKhoaKetThuc: number | null
   giaoDien: MaGiaoDien
   cap: CapHoc
+  /** Hạn dùng yyyy-mm-dd, null = không hạn */
+  hetHan: string | null
 }
 
 /** Tạo lớp: tự sinh mã (thử lại nếu trùng), đặt mật khẩu, tạo sơ đồ mặc định. */
@@ -109,6 +113,7 @@ export async function taoLop(tt: ThongTinLopMoi): Promise<{ lop: LopQuanTri; mat
         nien_khoa_ket_thuc: tt.nienKhoaKetThuc,
         giao_dien: tt.giaoDien,
         cap: tt.cap,
+        het_han: tt.hetHan,
       })
       .select()
       .single()
@@ -128,7 +133,10 @@ export async function datMatKhau(lopId: string, matKhau: string) {
   if (error) throw error
 }
 
-export async function capNhatLop(id: string, thayDoi: Partial<Pick<LopQuanTri, 'giao_dien' | 'trang_thai' | 'ten_goi' | 'het_han' | 'luon_can_mat_khau' | 'cap'>>) {
+export type ThayDoiLop = Partial<Pick<LopQuanTri, 'giao_dien' | 'trang_thai' | 'het_han' | 'luon_can_mat_khau' | 'cap'
+  | 'ten_lop' | 'truong' | 'tinh' | 'nien_khoa_bat_dau' | 'nien_khoa_ket_thuc' | 'ghi_chu_noi_bo'>>
+
+export async function capNhatLop(id: string, thayDoi: ThayDoiLop) {
   const { error } = await supabase.from('lop').update(thayDoi).eq('id', id)
   if (error) throw error
 }
@@ -552,4 +560,67 @@ export async function donFileChoXoa(): Promise<number> {
   await xoaNhieu(ds)
   await supabase.from('file_cho_xoa').delete().in('duong_dan', ds)
   return ds.length
+}
+
+/* ---------------- Hạn dùng ---------------- */
+/** Hôm nay theo giờ máy, dạng yyyy-mm-dd */
+export function homNay(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+/** Cộng n tháng vào một ngày yyyy-mm-dd (giữ ngày; 31/1 + 1 tháng = cuối tháng 2) */
+export function congThang(ngay: string, n: number): string {
+  const [y, m, d] = ngay.split('-').map(Number)
+  const dich = new Date(y, m - 1 + n, 1)
+  const cuoiThang = new Date(dich.getFullYear(), dich.getMonth() + 1, 0).getDate()
+  dich.setDate(Math.min(d, cuoiThang))
+  return `${dich.getFullYear()}-${String(dich.getMonth() + 1).padStart(2, '0')}-${String(dich.getDate()).padStart(2, '0')}`
+}
+
+/** Số ngày còn lại đến hạn (âm = đã quá hạn), null nếu không đặt hạn */
+export function soNgayConLai(hetHan: string | null | undefined): number | null {
+  if (!hetHan) return null
+  const ms = new Date(hetHan.slice(0, 10) + 'T00:00:00').getTime() - new Date(homNay() + 'T00:00:00').getTime()
+  return Math.round(ms / 86400000)
+}
+
+export type TinhTrangHan = 'khong-han' | 'con-han' | 'sap-het' | 'het-han'
+export const NGAY_BAO_SAP_HET = 30
+export function tinhTrangHan(hetHan: string | null | undefined): TinhTrangHan {
+  const n = soNgayConLai(hetHan)
+  if (n === null) return 'khong-han'
+  if (n < 0) return 'het-han'
+  if (n <= NGAY_BAO_SAP_HET) return 'sap-het'
+  return 'con-han'
+}
+
+/* ---------------- Xóa hẳn lớp ---------------- */
+/**
+ * Xóa vĩnh viễn một lớp: xóa toàn bộ file ảnh trên kho trước, rồi xóa dòng lớp
+ * (thành viên, sơ đồ, buổi họp, ảnh, lớp trưởng… tự xóa theo). Không lấy lại được.
+ */
+export async function xoaLop(lopId: string, bao: (s: string) => void = () => {}) {
+  bao('Đang tìm ảnh của lớp…')
+  const duongDan: string[] = []
+  for (let tu = 0; ; tu += 1000) {
+    const { data, error } = await supabase.from('anh').select('duong_dan_xem, duong_dan_goc').eq('lop_id', lopId).range(tu, tu + 999)
+    if (error) throw error
+    for (const a of data ?? []) duongDan.push(a.duong_dan_xem, a.duong_dan_goc)
+    if (!data || data.length < 1000) break
+  }
+  if (duongDan.length) {
+    bao(`Đang xóa ${duongDan.length / 2} ảnh trên kho…`)
+    await xoaNhieu(duongDan)
+  }
+  bao('Đang xóa dữ liệu lớp…')
+  const { error } = await supabase.from('lop').delete().eq('id', lopId)
+  if (error) throw error
+}
+
+/** Số ảnh đang chờ duyệt của một lớp */
+export async function demAnhChoDuyet(lopId: string): Promise<number> {
+  const { count } = await supabase.from('anh').select('id', { count: 'exact', head: true })
+    .eq('lop_id', lopId).eq('trang_thai', 'cho-duyet').eq('da_tai_xong', true)
+  return count ?? 0
 }
